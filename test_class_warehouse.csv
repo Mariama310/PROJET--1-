@@ -1,0 +1,11 @@
+product_id,description,price,quantity_in_stock
+1,"Product 1",10.99,50
+2,"Product 2",15.99,25
+3,"Product 3",5.99,100
+4,"Product 4",8.99,75
+5,"Product 5",12.99,60
+6,"Product 6",7.99,40
+7,"Product 7",9.99,80
+8,"Product 8",6.99,90
+9,"Product 9",11.99,35
+10,"Product 10",14.99,70

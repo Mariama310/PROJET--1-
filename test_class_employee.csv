@@ -1,0 +1,11 @@
+employee_id,name,address,phone_number,position,salary
+1,John Doe,123 Main St,555-1234,Manager,5000
+2,Jane Smith,456 Elm St,555-5678,Developer,4000
+3,Robert Johnson,789 Oak St,555-9012,Analyst,3500
+4,Susan Williams,321 Pine St,555-3456,Designer,4500
+5,Michael Brown,654 Cedar St,555-7890,Engineer,3800
+6,Linda Davis,987 Walnut St,555-2345,Administrator,3200
+7,David Anderson,159 Maple St,555-6789,Technician,3000
+8,Sarah Wilson,852 Birch St,555-0123,Programmer,4200
+9,James Taylor,753 Spruce St,555-4567,Manager,4800
+10,Emily Thomas,426 Oakwood St,555-8901,Developer,3900

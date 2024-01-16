@@ -1,0 +1,2 @@
+"shipping_nbr;client_name;cin;shipping_address;phone_nbr;order_nbr;order_date;central_dep_hr;central_arr_hr;worksite_arr_hr;worksite_dep_hr;product_id;quantity;product_type;vehicle;total_ttc"
+"0;Guillaume;None;Paris La Défense;0987654321;0;08/08/2001;8:00:00;18:00:00;9:00:00;17:00:00;3;3beton;camion;2000"
