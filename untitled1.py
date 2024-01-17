@@ -1,21 +1,20 @@
-import customtkinter as ctk
-import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk, simpledialog, messagebox
-
-
 #imports
 import pandas as pd
 from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 import re
-import customtkinter as ctk 
+import customtkinter as ctk
 from datetime import date
 import csv
 
 #   pip install python-docx (for editing words)
+from docx import Document
+from docx.shared import Pt, RGBColor #text size, color
 from docx.enum.text import WD_ALIGN_PARAGRAPH #paragraph alignment
+
+from tkcalendar import Calendar #pip install tkcalendar
+
 
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")
@@ -230,13 +229,11 @@ class Product:
     stock=property(get_quantity_in_stock,set_quantity_in_stock)
     
 class Order:
-    def __init__(self, order_id, order_date, client, products, payment_type="", price=0,
-                 quantity = None, price_paid = 0, pompe=None):
+    def __init__(self, order_id, order_date, client, products, payment_type="", price=0, price_paid = 0, pompe=False):
         self._order_id = order_id
         self._order_date = order_date
         self._client = client
         self._products = products
-        self._quantity = quantity
         self._price = price
         self._price_paid = price_paid
         self._payment_type=payment_type.capitalize()
@@ -266,12 +263,6 @@ class Order:
         self._products = products
     products=property(get_products,set_products)
     
-    def get_quantity(self):
-        return self._quantity
-    def set_quantity(self,quantity):
-        self._quantity=quantity
-    quantity=property(get_quantity, set_quantity)
-    
     def get_price(self):
         return self._price
     def set_price(self, price):
@@ -297,11 +288,11 @@ class Order:
     pompe=property(get_pompe, set_pompe)
     
     def CreateBDC(self):
-        titleSize = Pt(15)
-        valueSize = Pt(10)
-        tickSize = Pt(15)
+        titleSize = Pt(13)
+        valueSize = Pt(12)
+        tickSize = Pt(14)
         tickChar = '\u2714'
-        tickColor = '80ff80' #code hex sans le #
+        tickColor = '2ec92e' #code hex sans le #80ff80
             
         def AddTitleValue(paragraph, title, value="", length=0, alignment='left'):
             if alignment=='right':
@@ -329,42 +320,35 @@ class Order:
         AddTitleValue(p, 'CLIENT : ', self.client.name, 27)
         
         #tel client
-        AddTitleValue(p, '\t\t\t\t\tTEL : ', self.client.phone, 24)
+        AddTitleValue(p, '\t\t\t\t\t\tTEL : ', self.client.phone, 24)
         
         #products
-        p = document.add_paragraph()
-        if len(self.products)==1:
-            AddTitleValue(p, "Produit : ", self.products[0])
-        else:
-            for i,product in enumerate(self.products):
-                if i%2==0 and i!=0:
-                    p=document.add_paragraph()
-                AddTitleValue(p, "\t\t\t", self.product)
-        
-        #quantite
-        p = document.add_paragraph()
-        AddTitleValue(p, 'Quantité : ', self.quantity, 24)
+        AddTitleValue(document.add_paragraph(), "Produit :\t\t\tQuantité :")
+        for product in self.products:
+            p = document.add_paragraph()
+            AddTitleValue(p, "", product[0].description, 60)
+            AddTitleValue(p, "\t\t\t", product[1])
         
         # dosage tick option
-        AddTitleValue(p, '\t\t\t\t\tDosage : ')
         p = document.add_paragraph()
-        AddTitleValue(p, 'Pompé           ', alignment='right')
-        if self.pompe!=None:
-            tick1, tick2 = ' ', tickChar
-            if self.pompe:
-                tick1, tick2 = tick2, tick1
-            run = p.add_run(f"{tick1}\t\t")
-            run.font.size = tickSize
-            run.font.color.rgb = RGBColor.from_string(tickColor)
-            p = document.add_paragraph()
-            AddTitleValue(p, 'Non Pompé  ', alignment='right')
-            run = p.add_run(f"{tick2}\t\t")
-            run.font.size = tickSize
-            run.font.color.rgb = RGBColor.from_string(tickColor)
+        AddTitleValue(p, 'Dosage :\t')
+        AddTitleValue(p, 'Pompé  ')
+        tick1, tick2 = (tickChar, ' ') if self.pompe else (' ', tickChar)
+        run = p.add_run(f"{tick1}\t")
+        run.font.size = tickSize
+        run.font.color.rgb = RGBColor.from_string(tickColor)
+        AddTitleValue(p, 'Non Pompé  ')
+        run = p.add_run(f"{tick2}")
+        run.font.size = tickSize
+        run.font.color.rgb = RGBColor.from_string(tickColor)
+        
+        #payment method
+        if self.payment_type=='Especes':
+            AddTitleValue(p, '\t\t\tRèglement : ','Espèces')
+        elif self.payment_type=='Cheque':
+            AddTitleValue(p, '\t\t\tRèglement : ','Chèque')
         else:
-            AddTitleValue(p, '\t\t\t\t\tDosage : ')
-            AddTitleValue(document.add_paragraph(), 'Pompé          ', ' \t\t', 'right')
-            AddTitleValue(document.add_paragraph(), 'Non Pompé ', ' \t\t', 'right')
+            AddTitleValue(p, '\t\t\tRèglement : ','Virement')
 
         #date commande
         p = document.add_paragraph()
@@ -372,18 +356,6 @@ class Order:
 
         #adresse client
         AddTitleValue(p, '\t\t\t\tDestination : ', self.client.address, 28)
-        
-        #payment method
-        if self.payment_type=='Especes':
-            AddTitleValue(document.add_paragraph(), 'Règlement espèces : \t\t\t\tOui')
-        elif self.payment_type=='Cheque':
-            p=document.add_paragraph()
-            AddTitleValue(p, 'Règlement par chèque : \t\t\t\tOui')
-            #à finir d'implémenter
-        else:
-            p=document.add_paragraph()
-            AddTitleValue(p, 'Règlement par virement : \t\t\t\tOui')
-            #à finir d'implémenter
         
         #montant
         p = document.add_paragraph()
@@ -735,8 +707,24 @@ class Livraison:
         print(f"Vehicle : {self._vehicle}")
         print(f"Total TTC : {self._total_ttc}")
 
-    
+#general functions to get objects by id    
+def getClientById(id):
+    for client in client_instances:
+        if client.clt_id==id:
+            return client
+    return None
 
+def getOrderById(id):
+    for order in order_instances:
+        if order.order_id==id:
+            return order
+    return None
+
+def getProductById(id):
+    for prod in product_instances:
+        if prod.id==id:
+            return prod
+    return None
 
 
 
@@ -930,8 +918,7 @@ livraison_data = csv_list("./test_livraison.csv")
 
 
 # Fonction pour se connecter
-       
-def login():
+def login(event=None): #event=None to be able to login by pressing the Return key or using the button
     employee_name = username_entry.get()
     employee_password = password_entry.get()
     if employee_name == ADMIN_USERNAME:
@@ -995,6 +982,7 @@ def get_next_client_id():
 def refresh_client_ids():
     for index, client in enumerate(clients_data):
         client["ID"] = index + 1
+
 def refresh_product_ids():
     for index, product in enumerate(products_data):
         product["ID"] = index + 1
@@ -1018,7 +1006,7 @@ def generate_new_supplier_id():
 def create_main_window():
     window = tk.Tk()
     window.title("Gestion d'entreprise")
-    window.geometry("600x600")
+    window.geometry("800x600+0+0")
       
     navbar = tk.Frame(window)
     navbar.pack()
@@ -1505,134 +1493,31 @@ def create_main_window():
         tk.Label(frame,text="Clients").pack()
         
         
-        #//////////////////////////// INTERFACE ORDER ///////////////////////////////////////////
+    #//////////////////////////// INTERFACE ORDER ///////////////////////////////////////////
         
     def orders():    
-        Clear_widgets(frame)                   
-        def display_orders():
-            if not orders_tree.get_children():
-                for order in orders_data:
-                    orders_tree.insert("", tk.END, values=(
-                        order["Order ID"], order["Order Date"], order["Client ID"], order["Products"],
-                        order.get("Type de Transaction", ""), order.get("Statut", "")
-                    ))
-        titre_label = tk.Label(frame, text="Orders", font=("Arial", 16))
-        titre_label.pack(pady=5)
+        Clear_widgets(frame)
 
-        columns = ("Order ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Statut")
-        orders_tree = ttk.Treeview(frame, columns=columns, show="headings")
-        
-        def double_click_order(event):
-            selected_item = orders_tree.focus()
-            if selected_item:
-                values = orders_tree.item(selected_item, "values")
-                if values:
-                    order_id_entry.delete(0, tk.END)
-                    order_date_entry.delete(0, tk.END)
-                    client_id_entry.delete(0, tk.END)
-                    products_entry.delete(0, tk.END)
-                    order_id_entry.insert(tk.END, values[0])
-                    order_date_entry.insert(tk.END, values[1])
-                    client_id_entry.insert(tk.END, values[2])
-                    products_entry.insert(tk.END, values[3])
-
-
-        for col in columns:
-            orders_tree.heading(col, text=col)
-            orders_tree.column(col, width=150)
-
-        orders_tree.pack(fill=tk.BOTH, expand=True, pady=10)
-        orders_tree.bind("<Double-1>", double_click_order)
-        
-        
-        # Add the labels and input fields for adding/modifying an order
-        input_frame_orders = tk.Frame(frame)
-        input_frame_orders.pack()
-        
-        order_id_label = tk.Label(input_frame_orders, text="ID de commande :")
-        order_id_label.pack(side=tk.LEFT, padx=5)
-        order_id_entry = tk.Entry(input_frame_orders, validate="key")
-        order_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        order_id_entry.pack(side=tk.LEFT, padx=5)
-        
-        order_date_label = tk.Label(input_frame_orders, text="Date de commande :")
-        order_date_label.pack(side=tk.LEFT, padx=5)
-        order_date_entry = tk.Entry(input_frame_orders)
-        order_date_entry.pack(side=tk.LEFT, padx=5)
-        
-        client_id_label = tk.Label(input_frame_orders, text="ID de client :")
-        client_id_label.pack(side=tk.LEFT, padx=5)
-        client_id_entry = tk.Entry(input_frame_orders, validate="key")
-        client_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        client_id_entry.pack(side=tk.LEFT, padx=5)
-        
-        products_label = tk.Label(input_frame_orders, text="Produits (séparés par des virgules) :")
-        products_label.pack(side=tk.LEFT, padx=5)
-        products_entry = tk.Entry(input_frame_orders)
-        products_entry.pack(side=tk.LEFT, padx=5)
-        
-        
-        # Add the select boxes for Type de Transaction and Statut
-        transaction_frame = tk.Frame(frame)
-        transaction_frame.pack(pady=10)
-        
-        type_transaction_label = tk.Label(transaction_frame, text="Type de Transaction:")
-        type_transaction_label.pack(side=tk.LEFT, padx=5)
-        type_transaction_var = tk.StringVar(frame)
-        type_transaction_var.set("CHEQUES")
-        type_transaction_select = ttk.Combobox(transaction_frame, textvariable=type_transaction_var, values=["CHEQUES", "ESPECES", "VIREMENT"], state="readonly")
-        type_transaction_select.pack(side=tk.LEFT, padx=5)
-        
-        statut_label = tk.Label(transaction_frame, text="Statut:")
-        statut_label.pack(side=tk.LEFT, padx=5)
-        statut_var = tk.StringVar(frame)
-        statut_var.set("PAYE")
-        statut_select = ttk.Combobox(transaction_frame, textvariable=statut_var, values=["PAYE", "Non PAYE", "AVANCE"], state="readonly")
-        statut_select.pack(side=tk.LEFT, padx=5)
-        
-        tk.Label(transaction_frame, text="Pompé :").pack(side=tk.LEFT, padx=5)
-        pompe_var = tk.StringVar(frame)
-        pompe_var.set("Oui")
-        ttk.Combobox(transaction_frame, textvariable=pompe_var, values=["Oui", "Non"], state="readonly").pack(side=tk.LEFT, padx=5)  
-
-        tk.Label(transaction_frame, text="Prix :").pack(side=tk.LEFT, padx=5)
-        order_price_entry = tk.Entry(transaction_frame, validate="key")
-        order_price_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        order_price_entry.pack(side=tk.LEFT, padx=5)
-                        
-        # Add the buttons for adding/modifying an order
-        button_frame_orders = tk.Frame(frame)
-        button_frame_orders.pack(pady=10)
-        
-        add_button_orders = ctk.CTkButton(button_frame_orders, text="Liste des commandes", command=display_orders)
-        add_button_orders.pack(side=tk.LEFT, padx=5)
-        
         def add_order():
-            client_id = client_id_entry.get()
+            client_id = order_client_id_entry.get()
             if client_id.isnumeric():
-                # Vérifier si le client existe dans la liste des clients
-                client = None
-                for existing_client in client_instances:
-                    if existing_client.id == int(client_id):
-                        client = existing_client
-                        break
-
+                client = getClientById(int(client_id))
                 if client:
-                    order_date = order_date_entry.get()
-                    products = products_entry.get().split(";")
+                    order_date = order_date_label.cget('text')
                     type_transaction = type_transaction_var.get()
                     statut = statut_var.get()
-                    price = int(order_price_entry.get())
                     pompe = True if pompe_var.get() == 'Oui' else False
 
-                    if order_date != "" and products != []:
+                    if order_date != "" and order_listprod_var.get()!="":
+                        products = [(getProductById(int(id)), qty) for id, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
                         new_id = get_next_order_id()
-                        new_order = Order(new_id, order_date, client, products, type_transaction, price, pompe=pompe)
+                        new_order = Order(new_id, order_date, client, products, type_transaction, pompe=pompe)
                         order_instances.append(new_order)
-                        orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, products, type_transaction))
-                        order_date_entry.delete(0, tk.END)
-                        client_id_entry.delete(0, tk.END)
-                        products_entry.delete(0, tk.END)
+                        orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, " | ".join([f"{prod.id} : {qty}" for prod, qty in products]), type_transaction))
+                        order_date_label.config(text="")
+                        order_client_id_entry.delete(0, tk.END)
+                        order_listprod_var.set("")
+                        
                         type_transaction_var.set("CHEQUE")  # Set default value for Type de Transaction
                         statut_var.set("PAYE")  # Set default value for Statut
 
@@ -1647,9 +1532,43 @@ def create_main_window():
                     messagebox.showerror("Client inexistant", "Le client n'existe pas. Veuillez le créer avant d'ajouter la commande.")
             else:
                 messagebox.showerror("Erreur", "L'identifiant de client doit être une valeur numérique.")
-        
-        add_button_orders = tk.Button(button_frame_orders, text="Ajouter Commande", command=add_order)
-        add_button_orders.pack(side=tk.LEFT, padx=5)
+
+        def modify_order():
+            selected_item = orders_tree.selection()
+            if selected_item:
+                order_id = order_id_entry.get()
+                order_date = order_date_label.cget('text')
+                client_id = order_client_id_entry.get()
+                type_transaction = type_transaction_var.get()
+                statut = statut_var.get()
+
+                if order_id and order_date and client_id and order_listprod_var.get()!="" and type_transaction and statut:
+                    if is_numeric_input(order_id) and is_numeric_input(client_id):
+                        order_id = int(order_id)
+                        products = [(getProductById(int(id)), qty) for id, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
+                        selected_order_id = orders_tree.item(selected_item)["values"][0]
+                        if selected_order_id == order_id:
+                            
+                            df = pd.read_csv('./test_class_order.csv')
+                            colonne_index = 'order_id'
+                            df = df.set_index(colonne_index)
+                            
+                            nouvelles_valeurs = {'order_date': order_date, 'client_id': client_id, 'product_ids' : products}
+                            df.loc[order_id] = nouvelles_valeurs
+                            df.reset_index(inplace = True)
+                            
+                            df.to_csv('./test_class_order.csv', index = False)
+                            
+                            orders_tree.item(selected_item, values=(order_id, order_date, client_id, " | ".join([f"{prod.id} : {qty}" for prod, qty in products]), type_transaction, statut))
+                            messagebox.showinfo("Succès", "Commande modifiée avec succès.")
+                        else:
+                            messagebox.showerror("Erreur", "L'ID de la commande ne peut pas être modifié.")
+                    else:
+                        messagebox.showerror("Erreur", "L'identifiant de commande et l'identifiant de client doivent être des valeurs numériques.")
+                else:
+                    messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à modifier.")
         
         def delete_order():
             selected_item = orders_tree.selection()
@@ -1670,49 +1589,134 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à supprimer.")
         
-        delete_button_orders = tk.Button(button_frame_orders, text="Supprimer Commande", command=delete_order)
-        delete_button_orders.pack(side=tk.LEFT, padx=5)
-        
-        def modify_order():
-            selected_item = orders_tree.selection()
+        def double_click_order(event):
+            selected_item = orders_tree.focus()
             if selected_item:
-                order_id = order_id_entry.get()
-                order_date = order_date_entry.get()
-                client_id = client_id_entry.get()
-                products = products_entry.get()
-                type_transaction = type_transaction_var.get()
-                statut = statut_var.get()
-
-                if order_id and order_date and client_id and products and type_transaction and statut:
-                    if is_numeric_input(order_id) and is_numeric_input(client_id):
-                        order_id = int(order_id)
-                        selected_order_id = orders_tree.item(selected_item)["values"][0]
-                        if selected_order_id == order_id:
-                            
-                            df = pd.read_csv('./test_class_order.csv')
-                            colonne_index = 'order_id'
-                            df = df.set_index(colonne_index)
-                            
-                            nouvelles_valeurs = {'order_date': order_date, 'client_id': client_id, 'product_ids' : products}
-                            df.loc[order_id] = nouvelles_valeurs
-                            df.reset_index(inplace = True)
-                            
-                            df.to_csv('./test_class_order.csv', index = False)
-                            
-                            orders_tree.item(selected_item, values=(order_id, order_date, client_id, products, type_transaction, statut))
-                            messagebox.showinfo("Succès", "Commande modifiée avec succès.")
-                        else:
-                            messagebox.showerror("Erreur", "L'ID de la commande ne peut pas être modifié.")
-                    else:
-                        messagebox.showerror("Erreur", "L'identifiant de commande et l'identifiant de client doivent être des valeurs numériques.")
-                else:
-                    messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
-            else:
-                messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à modifier.")
+                values = orders_tree.item(selected_item, "values")
+                if values:
+                    order_id_entry.delete(0, tk.END)
+                    order_client_id_entry.delete(0, tk.END)
+                    order_id_entry.insert(tk.END, values[0])
+                    order_date_label.config(text=values[1])
+                    order_client_id_entry.insert(tk.END, values[2])
+                    order_listprod_var.set("\n".join(values[3].split(" | ")))
         
-        modify_button_orders = tk.Button(button_frame_orders, text="Modifier Commande", command=modify_order)
-        modify_button_orders.pack(side=tk.LEFT, padx=5)
+        def GetDate(event): #create a new window with a calendar
+            newWindow = tk.Toplevel(frame)
+            newWindow.geometry('250x200+300+100')
+            today = date.today()
+            cal = Calendar(newWindow, selectmode = 'day', year = today.year, month = today.month, day = today.day, date_pattern='dd/mm/y')
+            cal.pack(pady=5)
+            
+            def onclick_date(event):
+                order_date_label.config(text=cal.get_date())
+                newWindow.destroy()
+            
+            for row in cal._calendar:
+                for lbl in row:
+                    lbl.bind('<Double-1>', onclick_date)
+        
+        def ProductList(event): #create a new window to headle the product/qty list
+            def onclickProduct(event=None):
+                if order_add_qty_entry.get():
+                    s = order_listprod_var.get()+'\n' if order_listprod_var.get()!="" else ""
+                    s+=f"{order_add_product.get().split(')')[0][1:]} : {order_add_qty_entry.get()}"
+                    order_listprod_var.set(s)
+                    order_add_qty_entry.delete(0, tk.END)
+                    order_add_qty_entry.focus_set()
+                
+            newWindow = tk.Toplevel(frame)
+            newWindow.geometry('250x150+400+200')
+            tk.Label(newWindow, text='ID Produit : Quantité (kg/m\u00B3)').grid(column=0, row=0) #^3 : U+00B3
+            tk.Label(newWindow, textvariable=order_listprod_var, bg='white', bd=1, justify='left', anchor='w', relief='sunken').grid(column=0, row=1, columnspan=2, sticky='WE', pady=3)
+            order_add_product = tk.StringVar(newWindow, f"({product_instances[0].id}) {product_instances[0].description}")
+            ttk.Combobox(newWindow, textvariable= order_add_product, values=[f"({prod.id}) {prod.description}" for prod in product_instances], state="readonly").grid(column=0, row=2)
+            order_add_qty_entry = tk.Entry(newWindow, width=14, validate='key', validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+            order_add_qty_entry.grid(column=1, row=2)
+            order_add_qty_entry.bind('<Return>', onclickProduct)
+            tk.Button(newWindow, text="Clear list", command=lambda:order_listprod_var.set("")).grid(column=0, row=3)
+            tk.Button(newWindow, text="Ajouter produit", command=onclickProduct).grid(column=1, row=3, pady=5)
+
+        def display_orders():
+            if not orders_tree.get_children():
+                for order in orders_data:
+                    orders_tree.insert("", tk.END, values=(
+                        order["Order ID"], order["Order Date"], order["Client ID"], order["Products"],
+                        order.get("Type de Transaction", ""), order.get("Statut", "")
+                    ))
+        
+        titre_label = tk.Label(frame, text="Orders", font=("Arial", 16))
+        titre_label.pack(pady=5)
+
+        columns = ("Order ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Statut")
+        orders_tree = ttk.Treeview(frame, columns=columns, show="headings")
+
+        for col in columns:
+            orders_tree.heading(col, text=col)
+            orders_tree.column(col, width=150)
+
+        orders_tree.pack(fill=tk.BOTH, expand=True, pady=10)
+        orders_tree.bind("<Double-1>", double_click_order)
+        
+        
+        # Add the labels and input fields for adding/modifying an order
+        input_frame_orders = tk.Frame(frame)
+        input_frame_orders.pack()
+
+        tk.Label(input_frame_orders, text="ID de commande :").pack(side=tk.LEFT, padx=5)
+        order_id_entry = tk.Entry(input_frame_orders, validate="key")
+        order_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        order_id_entry.pack(side=tk.LEFT, padx=5)
+
+        tk.Label(input_frame_orders, text="Date de commande :").pack(side=tk.LEFT, padx=5)
+        order_date_label = tk.Label(input_frame_orders, bg="white", width=10, relief='sunken', bd=1, cursor='hand2')
+        order_date_label.pack(side=tk.LEFT, padx=5)
+        order_date_label.bind('<Button-1>', GetDate)
+        
+        tk.Label(input_frame_orders, text="ID de client :").pack(side=tk.LEFT, padx=5)
+        order_client_id_entry = tk.Entry(input_frame_orders, validate="key")
+        order_client_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        order_client_id_entry.pack(side=tk.LEFT, padx=5)
+        
+        tk.Label(input_frame_orders, text="Produits :").pack(side=tk.LEFT, padx=5)
+        order_listprod_var = tk.StringVar(input_frame_orders, "")
+        order_listprod_label = tk.Label(input_frame_orders, textvariable=order_listprod_var, bg="white", width=40, relief='sunken', bd=1, justify='left', anchor='w', cursor='hand2')
+        order_listprod_label.pack(side=tk.LEFT, padx=5)
+        order_listprod_label.bind('<Button-1>', ProductList)
+        
+        
+        # Add the select boxes for Type de Transaction and Statut
+        transaction_frame = tk.Frame(frame)
+        transaction_frame.pack(pady=10)
+
+        tk.Label(transaction_frame, text="Type de Transaction:").pack(side=tk.LEFT, padx=5)
+        type_transaction_var = tk.StringVar(frame)
+        type_transaction_var.set("CHEQUES")
+        type_transaction_select = ttk.Combobox(transaction_frame, textvariable=type_transaction_var, values=["CHEQUES", "ESPECES", "VIREMENT"], state="readonly")
+        type_transaction_select.pack(side=tk.LEFT, padx=5)
+
+        tk.Label(transaction_frame, text="Statut:").pack(side=tk.LEFT, padx=5)
+        statut_var = tk.StringVar(frame)
+        statut_var.set("PAYE")
+        statut_select = ttk.Combobox(transaction_frame, textvariable=statut_var, values=["PAYE", "Non PAYE", "AVANCE"], state="readonly")
+        statut_select.pack(side=tk.LEFT, padx=5)
+
+        tk.Label(transaction_frame, text="Pompé :").pack(side=tk.LEFT, padx=5)
+        pompe_var = tk.StringVar(frame)
+        pompe_var.set("Oui")
+        ttk.Combobox(transaction_frame, textvariable=pompe_var, values=["Oui", "Non"], state="readonly").pack(side=tk.LEFT, padx=5)
+                        
+        # Add the buttons for adding/modifying an order
+        button_frame_orders = tk.Frame(frame)
+        button_frame_orders.pack(pady=10)
+        
+        #buttons
+        ctk.CTkButton(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame_orders, text="Ajouter Commande", command=add_order).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame_orders, text="Supprimer Commande", command=delete_order).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame_orders, text="Modifier Commande", command=modify_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Créer un Bon de Commande", command=lambda: getOrderById(int(order_id_entry.get())).CreateBDC()).pack(side=tk.LEFT, padx=5)
+        
 
         #////////////////////////////  FIN INTERFACE ORDER ///////////////////////////////////////////
               
@@ -1726,7 +1730,7 @@ def create_main_window():
     ctk.CTkButton(navbar, text="Suppliers", command=Supplier).pack(side="left")
 
 
-    open_section(frame)
+    #open_section(frame) #I had an error with this line
     window.mainloop()
 
 # Fonction pour ouvrir différentes sections
@@ -1772,6 +1776,7 @@ password_label.grid(row=3, column=0, pady=(0, 5), sticky="w")
 
 password_entry = ctk.CTkEntry(login_frame, show="*", font=("Helvetica", 12))
 password_entry.grid(row=4, column=0, pady=(0, 10), sticky="w")
+password_entry.bind('<Return>', login)
 
 login_button = ctk.CTkButton(login_window, text="Se connecter", command=login, font=("Helvetica", 12))
 login_button.pack(pady=(0, 20))
