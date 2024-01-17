@@ -1073,10 +1073,10 @@ for index, row in df3.iterrows():
 df4=pd.read_csv("./test_class_client.csv")
 client_instances = []
 for index, row in df4.iterrows():
-    client_id = row['ID']
-    name = row['Name']
-    address = row['Email']
-    phone_number = row['Phone Number']
+    client_id = row['client_id']
+    name = row['name']
+    address = row['address']
+    phone_number = row['phone_number']
     client = Client(client_id, name, address, phone_number)
     client_instances.append(client)
 #for client in client_instances:
@@ -1143,13 +1143,14 @@ sale_instances = []
 
 for index, row in df9.iterrows():
     #sale_id = row['order_id']
-    sale_date = row['Sale Date']
-    product_id = row['Product ID']
-    quantity_sold = row['Quantity Sold']
-    sale_price = row['Sale Price']
-    client_id = row['Client ID']
+    sale_date = row['sale_date']
+    product_id = row['product_id']
+    quantity_sold = row['quantity_sold']
+    sale_price = row['sale_price']
+    client_id = row['client_id']
     sale = Sale(sale_date, product_id, quantity_sold, sale_price,client_id)
     sale_instances.append(sale)
+
 
 
 
