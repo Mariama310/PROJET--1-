@@ -1,0 +1,4 @@
+shipping_nbr,client_name,cin,shipping_address,phone_nbr,order_nbr,order_date,central_dep_hr,central_arr_hr,worksite_arr_hr,worksite_dep_hr,product_id,quantity,adjuvant,vehicle,total_ttc,variable1,variable2,chauffeur,{quantity_a},order_date_l
+1,Sarah Wilson,1312441415,Paris,06 51 37 19 91,4,2023-12-28,10:00:00,20:00:00,16:00:00,14:00:00,3,10000,Adjuvant 2,AZRB24ZR,10 000, ,X,Chauffeur 3,2 500,2024-01-18
+2,Emily Thomas,1312441415,Lyon,06 51 37 19 91,4,2023-12-28,10:00:00,20:00:00,16:00:00,14:00:00,4,10000,Adjuvant 2,AZRB24ZR,10 000,X, ,Chauffeur 3,2 500,2024-01-18
+3,James Taylor,24,Paris,42,2,2024-01-17,00:00,00:00,00:00,00:00,40,24,Adjuvant 2,24,242,X, ,Chauffeur 1,24,2024-01-17
