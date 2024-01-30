@@ -1626,6 +1626,8 @@ def delete_sale():
         #refresh_sale_ids()                         #A VOIR SI A IMPLEMENTER
     else:
         messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à supprimer.")
+    
+       
         
 def supress_livraison():
     
