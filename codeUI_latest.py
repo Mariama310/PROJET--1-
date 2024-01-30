@@ -1293,6 +1293,7 @@ def refresh_product_ids():
         product["ID"] = index + 1
         
 def display_orders():
+    orders_tree.delete(*livraison_tree.get_children())
     if not orders_tree.get_children():
         for order in orders_data:
             orders_tree.insert("", tk.END, values=(
@@ -1301,11 +1302,13 @@ def display_orders():
             ))
 
 def display_clients():
+    clients_tree.delete(*clients_tree.get_children())
     if not clients_tree.get_children():
         for client in clients_data:
             clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Email"], client["Phone Number"]))
         
 def display_products():
+    products_tree.delete(*products_tree.get_children())
     if not products_tree.get_children():
         for product in products_data:
             products_tree.insert("", tk.END, values=(product["product_id"], product["description"], product["price"], product["quantity_in_stock"], product["historique"]))
@@ -1404,7 +1407,7 @@ def add_client():
 
 
 def add_order():
-    client_id = client_id_entry.get()
+    client_id = client_id_entry1.get()
     if client_id.isnumeric():
         # Vérifier si le client existe dans la liste des clients
         client = None
@@ -1433,7 +1436,7 @@ def add_order():
                 order_instances.append(new_order)
                 orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, products, type_transaction))
                 order_date_entry.delete(0, tk.END)
-                client_id_entry.delete(0, tk.END)
+                client_id_entry1.delete(0, tk.END)
                 products_entry.delete(0, tk.END)
                 type_transaction_var.set("CHEQUE")  # Set default value for Type de Transaction
                 statut_var.set("PAYE")  # Set default value for Statut
@@ -1454,7 +1457,7 @@ def add_order():
 
 
 def add_product():
-    produit_id = product_id_entry.get()
+    produit_id = product_id_entry1.get()
     description = description_entry.get()
     price = price_entry.get()
     quantity_in_stock = quantity_entry.get()
@@ -1473,7 +1476,7 @@ def add_product():
             new_product = Product(new_id, description, price, quantity_in_stock, historique)
             product_instances.append(new_product)
             products_tree.insert("", tk.END, values=(new_id, description, price, quantity_in_stock, historique))
-            product_id_entry.delete(0, tk.END)
+            product_id_entry1.delete(0, tk.END)
             description_entry.delete(0, tk.END)
             price_entry.delete(0, tk.END)
             quantity_in_stock.delete(0, tk.END)  # Set default value for Type de Transaction
@@ -1689,11 +1692,11 @@ def double_click_order(event):
         if values:
             order_id_entry.delete(0, tk.END)
             order_date_entry.delete(0, tk.END)
-            client_id_entry.delete(0, tk.END)
+            client_id_entry1.delete(0, tk.END)
             products_entry.delete(0, tk.END)
             order_id_entry.insert(tk.END, values[0])
             order_date_entry.insert(tk.END, values[1])
-            client_id_entry.insert(tk.END, values[2])
+            client_id_entry1.insert(tk.END, values[2])
             products_entry.insert(tk.END, values[3])
             
 def double_click_product(event):
@@ -1701,12 +1704,12 @@ def double_click_product(event):
     if selected_item:
         values = products_tree.item(selected_item, "values")
         if values:
-            product_id_entry.delete(0, tk.END)
+            product_id_entry1.delete(0, tk.END)
             description_entry.delete(0, tk.END)
             price_entry.delete(0, tk.END)
             quantity_entry.delete(0, tk.END)
             historique_entry.delete(0, tk.END)
-            product_id_entry.insert(tk.END, values[0])
+            product_id_entry1.insert(tk.END, values[0])
             description_entry.insert(tk.END, values[1])
             price_entry.insert(tk.END, values[2])
             quantity_entry.insert(tk.END, values[3])
@@ -1787,7 +1790,7 @@ def modify_order():
     if selected_item:
         order_id = order_id_entry.get()
         order_date = order_date_entry.get()
-        client_id = client_id_entry.get()
+        client_id = client_id_entry1.get()
         products = products_entry.get()
         type_transaction = type_transaction_var.get()
         statut = statut_var.get()
@@ -1823,7 +1826,7 @@ def modify_order():
 def modify_product():
     selected_item = products_tree.selection()
     if selected_item:
-        product_id = product_id_entry.get()
+        product_id = product_id_entry1.get()
         description = description_entry.get()
         price = price_entry.get()
         quantity = quantity_entry.get()
@@ -2633,9 +2636,9 @@ if __name__ == "__main__":
     
     client_id_label = tk.Label(input_frame_orders, text="ID de client :")
     client_id_label.pack(side=tk.LEFT, padx=5)
-    client_id_entry = tk.Entry(input_frame_orders, validate="key")
-    client_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-    client_id_entry.pack(side=tk.LEFT, padx=5)
+    client_id_entry1 = tk.Entry(input_frame_orders, validate="key")
+    client_id_entry1.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+    client_id_entry1.pack(side=tk.LEFT, padx=5)
     
     products_label = tk.Label(input_frame_orders, text="Produits (séparés par des virgules) :")
     products_label.pack(side=tk.LEFT, padx=5)
@@ -2811,8 +2814,8 @@ if __name__ == "__main__":
 
     product_id_label = tk.Label(input_frame_products, text="ID du produit :")
     product_id_label.pack(side=tk.LEFT, padx=5)
-    product_id_entry = tk.Entry(input_frame_products)
-    product_id_entry.pack(side=tk.LEFT, padx=5)
+    product_id_entry1 = tk.Entry(input_frame_products)
+    product_id_entry1.pack(side=tk.LEFT, padx=5)
 
     description_label = tk.Label(input_frame_products, text="Description :")
     description_label.pack(side=tk.LEFT, padx=5)
