@@ -2231,6 +2231,7 @@ def page_livraison(R):
                 name_entry.delete(0, 'end')
                 adress_entry.delete(0, 'end')
                 prod_entry.delete(0, 'end') 
+                order_entry.delete(0, 'end')
                 display_livraison()
             else: messagebox.showerror("Erreur", "Le numéro de livraison doit-être un chiffre !")
         else:
@@ -2254,6 +2255,11 @@ def page_livraison(R):
     order_date_l_label.pack()
     order_date_l_entry = DateEntry(root, date_pattern="yyyy-mm-dd")
     order_date_l_entry.pack()
+
+    adress_label = tk.Label(root, text="adresse :")
+    adress_label.pack()
+    adress_entry = tk.Entry(root)
+    adress_entry.pack()
 
     phone_nbr_label = tk.Label(root, text="Phone Number:")
     phone_nbr_label.pack()
@@ -2312,7 +2318,7 @@ def page_livraison(R):
     # Zone de saisie pour le camion
     matricule_label = tk.Label(root, text="Matricule :")
     matricule_label.pack()
-    matricule_entry = tk.Entry(root)
+    matricule_entry = ttk.Combobox(root, values=["Matricule 1", "Matricule 2", "Matricule 3"])
     matricule_entry.pack()
     
     chauffeur_label = tk.Label(root, text="Chauffeur :")
@@ -2325,6 +2331,11 @@ def page_livraison(R):
     total_ttc_label.pack()
     total_ttc_entry = tk.Entry(root)
     total_ttc_entry.pack()
+
+    variable3_label = tk.Label(root, text="Signé :")
+    variable3_label.pack()
+    variable3_combobox = ttk.Combobox(root, values=["OUI", "NON"])  # Add your desired values
+    variable3_combobox.pack()
 
     
     
@@ -2409,11 +2420,9 @@ def page_livraison(R):
                     mod_line=row
             original_date_str = mod_line[1].replace('/', '-')
             
-            original_date_obj = datetime.strptime(original_date_str, '%d-%m-%Y')
+            
 
-            formatted_date_str = original_date_obj.strftime('%Y-%m-%d')
-
-            order_date_entry.set_date(formatted_date_str)
+            order_date_entry.set_date(original_date_str)
 
         if client_name:
              with open('test_class_client.csv', 'r', newline='') as file:
@@ -2423,6 +2432,7 @@ def page_livraison(R):
                 if str(row[1])==str(client_name):
                     mod_line=row
              phone_nbr_entry.insert(tk.END, mod_line[3])
+             adress_entry.insert(tk.END, mod_line[2])
 
     # Lancement de l'application
     root.mainloop()
@@ -2933,10 +2943,7 @@ if __name__ == "__main__":
     name_entry.set_completion_list(names_list)
     name_entry.pack(side=tk.LEFT, padx=5)
     
-    adress_label = tk.Label(input_frame_livraison, text="adresse :")
-    adress_label.pack(side=tk.LEFT, padx=5)
-    adress_entry = tk.Entry(input_frame_livraison)
-    adress_entry.pack(side=tk.LEFT, padx=5)
+
     
     order_label = tk.Label(input_frame_livraison, text="N° de commande :")
     order_label.pack(side=tk.LEFT, padx=5)
