@@ -98,7 +98,7 @@ def generate_new_supplier_id():
 
 def is_valid_phone_number(phone_number):
     # Validate the phone number using a regular expression
-    phone_pattern = re.compile(r'^216\d{1,9}$')
+    phone_pattern = re.compile(r'^216\d{1,8}$')
     return phone_pattern.match(phone_number)
 
 def is_valid_email(email):
@@ -1073,10 +1073,10 @@ for index, row in df3.iterrows():
 df4=pd.read_csv("./test_class_client.csv")
 client_instances = []
 for index, row in df4.iterrows():
-    client_id = row['client_id']
-    name = row['name']
-    address = row['address']
-    phone_number = row['phone_number']
+    client_id = row['ID']
+    name = row['Name']
+    address = row['Email']
+    phone_number = row['Phone Number']
     client = Client(client_id, name, address, phone_number)
     client_instances.append(client)
 #for client in client_instances:
@@ -1143,11 +1143,11 @@ sale_instances = []
 
 for index, row in df9.iterrows():
     #sale_id = row['order_id']
-    sale_date = row['sale_date']
-    product_id = row['product_id']
-    quantity_sold = row['quantity_sold']
-    sale_price = row['sale_price']
-    client_id = row['client_id']
+    sale_date = row['Sale Date']
+    product_id = row['Product ID']
+    quantity_sold = row['Quantity Sold']
+    sale_price = row['Sale Price']
+    client_id = row['Client ID']
     sale = Sale(sale_date, product_id, quantity_sold, sale_price,client_id)
     sale_instances.append(sale)
 
@@ -1206,6 +1206,9 @@ sales_data = [
 """
 sales_data = pd.read_csv('./test_class_sales.csv')
 sales_data = sales_data.to_dict(orient='records')
+
+orders_data = pd.read_csv('./test_class_order.csv')
+orders_data = orders_data.to_dict(orient='records')
 
 sales_data_displayed = sales_data
 
@@ -1293,7 +1296,7 @@ def display_orders():
     if not orders_tree.get_children():
         for order in orders_data:
             orders_tree.insert("", tk.END, values=(
-                order["Order ID"], order["Order Date"], order["Client ID"], order["Products"],
+                order["order_id"], order["order_date"], order["client_id"], order["product_ids"],
                 order.get("Type de Transaction", ""), order.get("Statut", "")
             ))
 
@@ -1305,7 +1308,7 @@ def display_clients():
 def display_products():
     if not products_tree.get_children():
         for product in products_data:
-            products_tree.insert("", tk.END, values=(product["Produit ID"], product["Description"], product["Price"], product["Quantité"], product["Historique"]))
+            products_tree.insert("", tk.END, values=(product["product_id"], product["description"], product["price"], product["quantity_in_stock"], product["historique"]))
             
 def display_livraison():
     # Clear existing data in the tree
@@ -1366,6 +1369,16 @@ def add_client():
     email = email_entry.get()
     phone_number = phone_entry.get()
 
+    if not is_valid_phone_number(phone_number):
+            messagebox.showerror("Erreur", "Le numéro de téléphone doit commencer par 216 et contenir de 1 à 8 chiffres.")
+            return  # Exit the function if the phone number is not valid
+   
+    if not is_valid_email(email):
+            messagebox.showerror("Erreur", "L'adresse e-mail n'est pas valide.")
+            return  # Exit the function if the email address is not valid
+
+
+
     if name and email and phone_number:
         if is_numeric_input(phone_number):
             df = pd.read_csv('./test_class_client.csv')
@@ -1376,8 +1389,8 @@ def add_client():
 
             df.loc[size] = [client_id, name, email, phone_number]
             df.to_csv('./test_class_client.csv', index = False)
-            
-            
+           
+           
             client_instances.append(new_client)
             clients_tree.insert("", tk.END, values=(client_id, name, email, phone_number))
             client_name_entry.delete(0, tk.END)
@@ -1387,7 +1400,6 @@ def add_client():
             messagebox.showerror("Erreur", "Le numéro de téléphone doit être une valeur numérique.")
     else:
         messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
-        
 
 
 
@@ -1601,11 +1613,11 @@ def delete_sale():
     selected_item = sales_tree.selection()
     if selected_item:
         sale_id = sales_tree.item(selected_item)["values"][0]
-    
+   
         df = pd.read_csv('./test_class_sales.csv', sep = ',')
         df = df[df['Sale ID'] != sale_id]
         df.to_csv('./test_class_sales.csv', index=False)
-        
+       
         for sale in sales_data_displayed:
             if sale["Sale ID"] == sale_id:
                 sales_data_displayed.remove(sale)             # on ne devrait pas supprimer des données
