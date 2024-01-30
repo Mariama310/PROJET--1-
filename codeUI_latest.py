@@ -493,8 +493,8 @@ class Product:
     stock=property(get_quantity_in_stock,set_quantity_in_stock)
     
 class Order:
-    def __init__(self, order_id, order_date, client, products, payment_type="", price=0,
-                 quantity = None, price_paid = 0, pompe=None):
+    def __init__(self, order_id, order_date, client, products, statut, payment_type="", price=0,
+                 quantity = None, price_paid = 0, pompe=None,):
         self._order_id = order_id
         self._order_date = order_date
         self._client = client
@@ -504,6 +504,7 @@ class Order:
         self._price_paid = price_paid
         self._payment_type=payment_type.capitalize()
         self._pompe=pompe
+        self.statut = statut
     
     def get_order_id(self):
         return self._order_id
@@ -1290,7 +1291,7 @@ def refresh_order_ids():
         
 def refresh_product_ids():
     for index, product in enumerate(products_data):
-        product["ID"] = index + 1
+        product["product_id"] = index + 1
         
 def display_orders():
     orders_tree.delete(*livraison_tree.get_children())
@@ -1429,22 +1430,17 @@ def add_order():
                 df = pd.read_csv('./test_class_order.csv')
                 size = df.shape[0] + 1
                 new_id = size
-                df.loc[size] = [new_id, order_date, client_id, products]
+                df.loc[size] = [new_id, order_date, client_id, products, statut]
                 df.to_csv('./test_class_order.csv' , index = False)
 
-                new_order = Order(new_id, order_date, client, products, type_transaction, price, pompe=pompe)
+                new_order = Order(new_id, order_date, client, products, statut, type_transaction, price, pompe=pompe)
                 order_instances.append(new_order)
-                orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, products, type_transaction))
+                orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, products, type_transaction, statut))
                 order_date_entry.delete(0, tk.END)
                 client_id_entry1.delete(0, tk.END)
                 products_entry.delete(0, tk.END)
                 type_transaction_var.set("CHEQUE")  # Set default value for Type de Transaction
                 statut_var.set("PAYE")  # Set default value for Statut
-
-                df = pd.read_csv('./test_class_order.csv')
-                size = df.shape[0] + 1
-                df.loc[size] = [new_id, order_date, client_id, products]
-                df.to_csv('./test_class_order.csv', index=False)
             else:
                 messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
         else:
@@ -1554,7 +1550,7 @@ def delete_order():
         df = df[df['order_id'] != order_id]
         df.to_csv('./test_class_order.csv', index=False)
         for order in orders_data:
-            if order["Order ID"] == order_id:
+            if order["order_id"] == order_id:
                 
                 orders_data.remove(order)
                 break
@@ -1602,7 +1598,7 @@ def delete_product():
         df = df[df['product_id'] != item_id]
         df.to_csv('./test_class_product.csv', index=False)
         for product in products_data:
-            if product["Produit ID"] == item_id:
+            if product["product_id"] == item_id:
                 products_data.remove(product)
                 break
         products_tree.delete(selected_item)
@@ -1683,7 +1679,7 @@ def refresh_orders_table():
 def refresh_products_table():
     products_tree.delete(*products_tree.get_children())
     for product in products_data:
-        products_tree.insert("", tk.END, values=(product["Produit ID"], product["Description"], product["Price"], product["Quantité"], product["Historique"]))
+        products_tree.insert("", tk.END, values=(product["product_id"], product["description"], product["price"], product["quantity_in_stock"], product["historique"]))
         
 def double_click_order(event):
     selected_item = orders_tree.focus()
@@ -1805,7 +1801,7 @@ def modify_order():
                     colonne_index = 'order_id'
                     df = df.set_index(colonne_index)
                     
-                    nouvelles_valeurs = {'order_date': order_date, 'client_id': client_id, 'product_ids' : products}
+                    nouvelles_valeurs = {'order_date': order_date, 'client_id': client_id, 'product_ids' : products, 'statut' : statut}
                     df.loc[order_id] = nouvelles_valeurs
                     df.reset_index(inplace = True)
                     
