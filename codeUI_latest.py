@@ -98,7 +98,7 @@ def generate_new_supplier_id():
 
 def is_valid_phone_number(phone_number):
     # Validate the phone number using a regular expression
-    phone_pattern = re.compile(r'^216\d{1,8}$')
+    phone_pattern = re.compile(r'^216[1-9]\d{0,10}$') #not starting by zero and contains 11 figures
     return phone_pattern.match(phone_number)
 
 def is_valid_email(email):
@@ -113,9 +113,14 @@ def add_supplier():
         # Retrieve values from the entry fields using specific entry variables
         new_name = name_entry_supplier.get()
         new_address = address_entry_supplier.get()
-        new_main_number = phone_entry_supplier.get()
+        new_main_number_value = phone_entry_supplier.get()
         new_contact_person = contact_person_entry_supplier.get()
         new_email = email_entry_supplier.get()
+
+        if len(new_main_number_value) == 11: 
+            new_main_number = new_main_number_value  # if phone lenght = 11, no need to add 216
+        else:
+            new_main_number = '216' + new_main_number_value  # add 216 in other cases
 
         # Validate the phone number
         if not is_valid_phone_number(new_main_number):
@@ -376,15 +381,23 @@ class Employee(Personne):
     authority = property(get_authority, set_authority)
 
 class Client(Personne):
-    def __init__(self, client_id, name=None, address=None, phone_number=None):
+    def __init__(self, client_id, name=None, address=None, phone_number=None, email=None):
         super().__init__(client_id, name, address, phone_number)
         self._client_id = client_id
+        self._email = email
     def get_client_id(self):
         return self._client_id
-    
     def set_client_id(self, client_id):
         self._client_id = client_id
+
     clt_id=property(get_client_id,set_client_id)
+
+    def get_email(self):
+        return self._email
+    def set_email(self, address):
+        self._address = address
+    
+    #clt_email=property(get_email,set_email)
 
 class Database:
     def __init__(self):
@@ -1076,9 +1089,10 @@ client_instances = []
 for index, row in df4.iterrows():
     client_id = row['ID']
     name = row['Name']
-    address = row['Email']
+    address = row['Address']
+    email_client = row['Email']
     phone_number = row['Phone Number']
-    client = Client(client_id, name, address, phone_number)
+    client = Client(client_id, name, address, email_client, phone_number)
     client_instances.append(client)
 #for client in client_instances:
     #print(client.id,client.name,client.address,client.phone)
@@ -1306,7 +1320,7 @@ def display_clients():
     clients_tree.delete(*clients_tree.get_children())
     if not clients_tree.get_children():
         for client in clients_data:
-            clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Email"], client["Phone Number"]))
+            clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"]))
         
 def display_products():
     products_tree.delete(*products_tree.get_children())
@@ -1371,14 +1385,20 @@ def update_order_ids():
 def add_client():
     name = client_name_entry.get()
     email = email_entry.get()
-    phone_number = phone_entry.get()
+    phone_entry_value = phone_entry.get()
+    address = client_address_entry.get()
+
+    if len(phone_entry_value) == 11:  # Vérifie si la longueur est de 11 chiffres
+        phone_number = phone_entry_value  # Utilise la valeur telle quelle
+    else:
+        phone_number = '216' + phone_entry_value  # Ajoute '216' au début
 
     if not is_valid_phone_number(phone_number):
-            messagebox.showerror("Erreur", "Le numéro de téléphone doit commencer par 216 et contenir de 1 à 8 chiffres.")
+            messagebox.showerror("Erreur", "Le numéro de téléphone ne doit pas commencer par zéro et doit contenir 11 chiffres.")
             return  # Exit the function if the phone number is not valid
    
     if not is_valid_email(email):
-            messagebox.showerror("Erreur", "L'adresse e-mail n'est pas valide.")
+            messagebox.showerror("Erreur", "L'adresse e-mail n'est pas valide. \n Format : ___@___.__")
             return  # Exit the function if the email address is not valid
 
 
@@ -1389,15 +1409,16 @@ def add_client():
             size = df.shape[0] + 1
 
             client_id=size
-            new_client = Client(client_id, name, phone_number, email)
+            new_client = Client(client_id, name, address, email, phone_number)
 
-            df.loc[size] = [client_id, name, email, phone_number]
+            df.loc[size] = [client_id, name, address, email, phone_number]
             df.to_csv('./test_class_client.csv', index = False)
            
            
             client_instances.append(new_client)
-            clients_tree.insert("", tk.END, values=(client_id, name, email, phone_number))
+            clients_tree.insert("", tk.END, values=(client_id, name, address, email, phone_number))
             client_name_entry.delete(0, tk.END)
+            client_address_entry.delete(0,tk.END)
             email_entry.delete(0, tk.END)
             phone_entry.delete(0, tk.END)
         else:
@@ -1565,13 +1586,15 @@ def double_click_client(event):
         values = clients_tree.item(selected_item, "values")
         if values:
             id_entry.delete(0, tk.END)
-            name_entry.delete(0, tk.END)
+            client_name_entry.delete(0, tk.END)
+            client_address_entry.delete(0,tk.END)
             email_entry.delete(0, tk.END)
             phone_entry.delete(0, tk.END)
             id_entry.insert(tk.END, values[0])
-            name_entry.insert(tk.END, values[1])
-            email_entry.insert(tk.END, values[2])
-            phone_entry.insert(tk.END, values[3])
+            client_name_entry.insert(tk.END, values[1])
+            client_address_entry.insert(tk.END, values[2])
+            email_entry.insert(tk.END, values[3])
+            phone_entry.insert(tk.END, values[4])
             
 def delete_client():
     selected_item = clients_tree.selection()
@@ -1751,6 +1774,7 @@ def modify_client():
     if selected_item:
         client_id = id_entry.get()
         name = client_name_entry.get()
+        address = client_address_entry.get()
         email = email_entry.get()
         phone_number = phone_entry.get()
 
@@ -1763,13 +1787,13 @@ def modify_client():
                     df = pd.read_csv('./test_class_client.csv')
                     colonne_index = 'ID'
                     df = df.set_index(colonne_index)
-                    nouvelles_valeurs = {'Name': name, 'Email': email, 'Phone Number': phone_number}
+                    nouvelles_valeurs = {'Name': name, 'Address': address, 'Email': email, 'Phone Number': phone_number}
                     df.loc[client_id] = nouvelles_valeurs
                     df.reset_index(inplace = True)
                     
                     df.to_csv('./test_class_client.csv', index = False)
                     
-                    clients_tree.item(selected_item, values=(client_id, name, email, phone_number))
+                    clients_tree.item(selected_item, values=(client_id, name, address, email, phone_number))
                     messagebox.showinfo("Succès", "Client modifié avec succès.")
                     
                 else:
@@ -1918,6 +1942,7 @@ def get_order_history():
     if selected_item:
         client_id = id_entry.get()
         name = name_entry.get()
+        address = client_address_entry.get()
         email = email_entry.get()
         phone_number = phone_entry.get()
 
@@ -1950,6 +1975,7 @@ def get_unpaid_orders():
     if selected_item:
         client_id = id_entry.get()
         name = name_entry.get()
+        address = client_address_entry.get()
         email = email_entry.get()
         phone_number = phone_entry.get()
         
@@ -2537,6 +2563,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Gestion des Clients")
     root.withdraw()
+
     
     # Ajouter une barre de défilement
     scrollbar = tk.Scrollbar(root, orient="vertical")
@@ -2556,6 +2583,7 @@ if __name__ == "__main__":
     # Create the main menu (blank for now)
     menu_bar = tk.Menu(root)
     root.config(menu=menu_bar)
+
     
     # Create the Orders menu
     orders_menu = tk.Menu(menu_bar, tearoff=False)
@@ -2693,7 +2721,7 @@ if __name__ == "__main__":
     titre_label = tk.Label(frame, text="Clients", font=("Arial", 16))
     titre_label.pack(pady=5)
     
-    columns_clients = ("ID", "Nom", "E-mail", "Numéro de téléphone")
+    columns_clients = ("ID", "Nom", "Address", "Email", "Numéro de téléphone")
     
     tree_frame = tk.Frame(frame)
     tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -2734,6 +2762,11 @@ if __name__ == "__main__":
     name_label.pack(side=tk.LEFT, padx=5)
     client_name_entry = tk.Entry(input_frame_clients)
     client_name_entry.pack(side=tk.LEFT, padx=5)
+
+    client_address_label = tk.Label(input_frame_clients, text="Adresse :")
+    client_address_label.pack(side=tk.LEFT, padx=5)
+    client_address_entry = tk.Entry(input_frame_clients)
+    client_address_entry.pack(side=tk.LEFT, padx=5)
     
     email_label = tk.Label(input_frame_clients, text="E-mail :")
     email_label.pack(side=tk.LEFT, padx=5)
