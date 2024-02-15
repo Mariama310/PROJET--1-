@@ -739,7 +739,7 @@ def getProductById(id):
 ###### TESTS 
 
 # For Personne class
-df1 = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_personne_init.csv")
+df1 = pd.read_csv("./test_class_personne.csv")
 personne_instances = []
 for index, row in df1.iterrows():
     personne_id = row['personne_id']
@@ -752,7 +752,7 @@ for index, row in df1.iterrows():
     #print(personne.id, personne.name, personne.address, personne.phone)
 
 #For Supplier class
-df2=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv")
+df2=pd.read_csv("./test_class_supplier.csv")
 supplier_instances = []
 for index, row in df2.iterrows():
     supplier_id = row['supplier_id']
@@ -765,7 +765,7 @@ for index, row in df2.iterrows():
     #print(supp.id,supp.name,supp.address,supp.phone)
 
 #For Employee class 
-df3=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_employee_init.csv")
+df3=pd.read_csv("./test_class_employee.csv")
 employee_instances = []
 for index, row in df3.iterrows():
     employee_id = row['employee_id']
@@ -795,7 +795,7 @@ for index, row in df4.iterrows():
     #print(client.id,client.name,client.address,client.phone)
 
 #For product class
-df5=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv")
+df5=pd.read_csv("./test_class_product.csv")
 product_instances = []
 
 for index, row in df5.iterrows():
@@ -810,7 +810,7 @@ for index, row in df5.iterrows():
     #print(product.id, product.description, product.prix, product.stock)
 
 #For Order class
-df6=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv")
+df6=pd.read_csv("./test_class_order.csv")
 order_instances = []
 
 for index, row in df6.iterrows():
@@ -826,7 +826,7 @@ for index, row in df6.iterrows():
 
 #For Invoice class
 
-df7=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_invoice_init.csv")
+df7=pd.read_csv("./test_class_invoice.csv")
 invoice_instances = []
 
 for index, row in df7.iterrows():
@@ -841,7 +841,7 @@ for index, row in df7.iterrows():
     #print(invoice.id,invoice.date , invoice.total_amount, invoice.products)
 
 #For Warehouse class
-df8=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_warehouse_init.csv")
+df8=pd.read_csv("./test_class_warehouse.csv")
 warehouse=Warehouse(10000,0) #on a choisit pour le moment capacity=10000
 prd=0
 for index, row in df8.iterrows():
@@ -849,7 +849,7 @@ for index, row in df8.iterrows():
     prd+=quant
 
 #For Sale class
-df9 = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_sales_init.csv")
+df9 = pd.read_csv("./test_class_sales.csv")
 #print(df9)
 sale_instances = []
 
@@ -1012,7 +1012,7 @@ def is_valid_email(email):
 
 def generate_new_supplier_id():
     # Retrieve existing supplier IDs from the CSV file
-    csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv" # Replace with the actual path to your CSV file
+    csv_file_path = "./test_class_supplier.csv" # Replace with the actual path to your CSV file
     existing_ids = set()
 # Création de la fenêtre principale
 def create_main_window():
@@ -1066,10 +1066,10 @@ def create_main_window():
                 if is_numeric_input(produit_id):
                     new_id = get_next_order_id()
                     
-                    df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv")
+                    df = pd.read_csv("./test_class_product.csv")
                     size = df.shape[0] + 1
                     df.loc[size] = [new_id, description, price, quantity_in_stock, historique]
-                    df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", index=False)
+                    df.to_csv("./test_class_product.csv", index=False)
                 
                     new_product = Product(new_id, description, price, quantity_in_stock, historique)
                     product_instances.append(new_product)
@@ -1091,9 +1091,9 @@ def create_main_window():
                     if product["Produit ID"] == item_id:
                         
                         
-                        df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", sep = ',')
+                        df = pd.read_csv("./test_class_product.csv", sep = ',')
                         df = df[df['product_id'] != item_id]
-                        df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", index=False)
+                        df.to_csv("./test_class_product.csv", index=False)
                         
                         
                         products_data.remove(product)
@@ -1120,7 +1120,7 @@ def create_main_window():
                         if selected_produit_id == product_id:
                             products_tree.item(selected_item, values=(product_id, description, price, quantity, historique))
                             
-                            df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv")
+                            df = pd.read_csv("./test_class_product.csv")
                             colonne_index = 'product_id'
                             df = df.set_index(colonne_index)
                             
@@ -1128,7 +1128,7 @@ def create_main_window():
                             df.loc[product_id] = nouvelles_valeurs
                             df.reset_index(inplace = True)
                             
-                            df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", index = False)
+                            df.to_csv("./test_class_product.csv", index = False)
                             
                             messagebox.showinfo("Succès", "Commande modifiée avec succès.")
                         else:
@@ -1219,7 +1219,7 @@ def create_main_window():
             suppliers_tree.delete(*suppliers_tree.get_children())
 
             # Retrieve supplier data from the CSV file
-            csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv" 
+            csv_file_path = "./test_class_supplier.csv" 
 
             with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -1290,7 +1290,7 @@ def create_main_window():
                 new_supplier = Supplier(new_id, new_name, new_address, new_main_number, new_contact_person, new_email)
 
                 # Insert the new supplier data into the CSV file
-                csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv"
+                csv_file_path = "./test_class_supplier.csv"
 
                 with open(csv_file_path, mode='a', newline='', encoding='utf-8') as csv_file:
                     csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -1316,7 +1316,7 @@ def create_main_window():
             supplier_id_to_delete = int(supplier_id_entry_supplier.get())  # Assume the ID to delete is entered in the supplier ID field
 
             # Read the existing data from the CSV file
-            csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv"
+            csv_file_path = "./test_class_supplier.csv"
 
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -1360,7 +1360,7 @@ def create_main_window():
             id_to_modify = int(supplier_id_entry_supplier.get())
 
             # Read the existing data from the CSV file
-            csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv"
+            csv_file_path = "./test_class_supplier.csv"
 
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -1887,10 +1887,10 @@ def create_main_window():
                         type_transaction_var.set("CHEQUE")  # Set default value for Type de Transaction
                         statut_var.set("PAYE")  # Set default value for Statut
 
-                        df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv")
+                        df = pd.read_csv("./test_class_order.csv")
                         size = df.shape[0] + 1
                         df.loc[size] = [new_id, order_date, client_id, products]
-                        df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", index=False)
+                        df.to_csv("./test_class_order.csv", index=False)
                     else:
                         messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
                 else:
@@ -1915,7 +1915,7 @@ def create_main_window():
                         selected_order_id = orders_tree.item(selected_item)["values"][0]
                         if selected_order_id == order_id:
                             
-                            df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv")
+                            df = pd.read_csv("./test_class_order.csv")
                             colonne_index = 'order_id'
                             df = df.set_index(colonne_index)
                             
@@ -1923,7 +1923,7 @@ def create_main_window():
                             df.loc[order_id] = nouvelles_valeurs
                             df.reset_index(inplace = True)
                             
-                            df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", index = False)
+                            df.to_csv("./test_class_order.csv", index = False)
                             
                             orders_tree.item(selected_item, values=(order_id, order_date, client_id, " | ".join([f"{prod.id} : {qty}" for prod, qty in products]), type_transaction, statut))
                             messagebox.showinfo("Succès", "Commande modifiée avec succès.")
@@ -1944,9 +1944,9 @@ def create_main_window():
                     if order["Order ID"] == order_id:
                         
                         
-                        df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", sep = ',')
+                        df = pd.read_csv("./test_class_order.csv", sep = ',')
                         df = df[df['order_id'] != order_id]
-                        df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", index=False)
+                        df.to_csv("./test_class_order.csv", index=False)
                         
                         orders_data.remove(order)
                         break
