@@ -1121,7 +1121,8 @@ for index, row in df6.iterrows():
     order_date = row['order_date']
     client = row['client_id']
     products = row['product_ids']
-    order = Order(order_id, order_date, client, products)
+    statut = row['statut']
+    order = Order(order_id, order_date, client, products, statut)
     order_instances.append(order)
 
 #for order in order_instances:
@@ -1620,6 +1621,7 @@ def delete_product():
         df = pd.read_csv('./test_class_product.csv', sep = ',')
         df = df[df['product_id'] != item_id]
         df.to_csv('./test_class_product.csv', index=False)
+        
         for product in products_data:
             if product["product_id"] == item_id:
                 products_data.remove(product)

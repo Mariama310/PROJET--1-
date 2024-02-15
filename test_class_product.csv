@@ -1,10 +1,8 @@
 product_id,description,price,quantity_in_stock,historique
 1,Pants,35.99,30,hist2
-2,Shoes,49.99,20,hist3
-3,Hat,12.99,15,hist4
-4,Socks,6.99,100,hist5
-5,Dress,45.99,10,hist6
-6,Jeans,29.99,40,hist7
-7,Sweater,39.99,25,hist8
-8,Shorts,18.99,35,hist9
-9,Coat,89.99,5,hist10
+2,Hat,12.99,15,hist4
+3,Socks,6.99,100,hist5
+4,Dress,45.99,10,hist6
+5,Jeans,29.99,40,hist7
+6,Sweater,39.99,25,hist8
+7,Shorts,18.99,35,hist9

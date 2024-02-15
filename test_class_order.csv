@@ -1,1 +1,2 @@
-order_id,order_date,client_id,product_ids,statut
+order_id,order_date,client_id,product_ids,type_transaction,statut
+1,24,5,['dz'],CHEQUES,PAYE
