@@ -7,6 +7,8 @@ import re
 import customtkinter as ctk
 from datetime import date
 import csv
+import datetime
+
 
 #   pip install python-docx (for editing words)
 from docx import Document
@@ -15,7 +17,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH #paragraph alignment
 
 from tkcalendar import Calendar #pip install tkcalendar
 
-
+ctk.deactivate_automatic_dpi_awareness()
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")
 
@@ -112,15 +114,21 @@ class Employee(Personne):
     authority = property(get_authority, set_authority)
 
 class Client(Personne):
-    def __init__(self, client_id, name=None, address=None, phone_number=None):
+    def __init__(self, client_id, name=None, address=None, phone_number=None, email=None):
         super().__init__(client_id, name, address, phone_number)
         self._client_id = client_id
+        self._email = email
     def get_client_id(self):
         return self._client_id
-    
     def set_client_id(self, client_id):
         self._client_id = client_id
+
     clt_id=property(get_client_id,set_client_id)
+
+    def get_email(self):
+        return self._email
+    def set_email(self, address):
+        self._address = address
 
 class Database:
     def __init__(self):
@@ -731,7 +739,7 @@ def getProductById(id):
 ###### TESTS 
 
 # For Personne class
-df1 = pd.read_csv("./test_class_personne.csv")
+df1 = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_personne_init.csv")
 personne_instances = []
 for index, row in df1.iterrows():
     personne_id = row['personne_id']
@@ -744,7 +752,7 @@ for index, row in df1.iterrows():
     #print(personne.id, personne.name, personne.address, personne.phone)
 
 #For Supplier class
-df2=pd.read_csv("./test_class_supplier.csv")
+df2=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv")
 supplier_instances = []
 for index, row in df2.iterrows():
     supplier_id = row['supplier_id']
@@ -757,7 +765,7 @@ for index, row in df2.iterrows():
     #print(supp.id,supp.name,supp.address,supp.phone)
 
 #For Employee class 
-df3=pd.read_csv("./test_class_employee.csv")
+df3=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_employee_init.csv")
 employee_instances = []
 for index, row in df3.iterrows():
     employee_id = row['employee_id']
@@ -776,17 +784,18 @@ for index, row in df3.iterrows():
 df4=pd.read_csv("./test_class_client.csv")
 client_instances = []
 for index, row in df4.iterrows():
-    client_id = row['client_id']
-    name = row['name']
-    address = row['address']
-    phone_number = row['phone_number']
-    client = Client(client_id, name, address, phone_number)
+    client_id = row['ID']
+    name = row['Name']
+    address = row['Address']
+    email_client = row['Email']
+    phone_number = row['Phone Number']
+    client = Client(client_id, name, address, email_client, phone_number)
     client_instances.append(client)
 #for client in client_instances:
     #print(client.id,client.name,client.address,client.phone)
 
 #For product class
-df5=pd.read_csv("./test_class_product.csv")
+df5=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv")
 product_instances = []
 
 for index, row in df5.iterrows():
@@ -801,7 +810,7 @@ for index, row in df5.iterrows():
     #print(product.id, product.description, product.prix, product.stock)
 
 #For Order class
-df6=pd.read_csv("./test_class_order.csv")
+df6=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv")
 order_instances = []
 
 for index, row in df6.iterrows():
@@ -817,7 +826,7 @@ for index, row in df6.iterrows():
 
 #For Invoice class
 
-df7=pd.read_csv("./test_class_invoice.csv")
+df7=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_invoice_init.csv")
 invoice_instances = []
 
 for index, row in df7.iterrows():
@@ -832,7 +841,7 @@ for index, row in df7.iterrows():
     #print(invoice.id,invoice.date , invoice.total_amount, invoice.products)
 
 #For Warehouse class
-df8=pd.read_csv("./test_class_warehouse.csv")
+df8=pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_warehouse_init.csv")
 warehouse=Warehouse(10000,0) #on a choisit pour le moment capacity=10000
 prd=0
 for index, row in df8.iterrows():
@@ -840,7 +849,7 @@ for index, row in df8.iterrows():
     prd+=quant
 
 #For Sale class
-df9 = pd.read_csv("test_class_sales.csv")
+df9 = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_sales_init.csv")
 #print(df9)
 sale_instances = []
 
@@ -861,13 +870,16 @@ for index, row in df9.iterrows():
 ##########################
 
 # Sample data (you can load data from CSV as well)
-clients_data = [
-    {"ID": 1, "Name": "Alice", "Email": "alice@example.com", "Phone Number": "1234567890"},
-    {"ID": 2, "Name": "Bob", "Email": "bob@example.com", "Phone Number": "9876543210"},
-    {"ID": 3, "Name": "Charlie", "Email": "charlie@example.com", "Phone Number": "5678901234"},
-    {"ID": 4, "Name": "David", "Email": "david@example.com", "Phone Number": "8765432109"},
-    {"ID": 5, "Name": "Eve", "Email": "eve@example.com", "Phone Number": "4321098765"}
-]
+clients_data = clients_data =pd.read_csv('./test_class_client.csv')
+clients_data = clients_data.to_dict(orient='records')
+
+# clients_data = [
+#     {"ID": 1, "Name": "Alice", "Email": "alice@example.com", "Phone Number": "1234567890"},
+#     {"ID": 2, "Name": "Bob", "Email": "bob@example.com", "Phone Number": "9876543210"},
+#     {"ID": 3, "Name": "Charlie", "Email": "charlie@example.com", "Phone Number": "5678901234"},
+#     {"ID": 4, "Name": "David", "Email": "david@example.com", "Phone Number": "8765432109"},
+#     {"ID": 5, "Name": "Eve", "Email": "eve@example.com", "Phone Number": "4321098765"}
+# ]
 
 orders_data = [
     {"Order ID": 1, "Order Date": "2023-07-18", "Client ID": 1, "Products": "Product A, Product B", "Type de Transaction": "CHEQUES", "Statut": "PAYE"},
@@ -989,7 +1001,7 @@ def refresh_product_ids():
         
 def is_valid_phone_number(phone_number):
     # Validate the phone number using a regular expression
-    phone_pattern = re.compile(r'^216\d{1,9}$')
+    phone_pattern = re.compile(r'^216[1-9]\d{0,10}$') #not starting by zero and contains 11 figures
     return phone_pattern.match(phone_number)
 
 def is_valid_email(email):
@@ -1000,7 +1012,7 @@ def is_valid_email(email):
 
 def generate_new_supplier_id():
     # Retrieve existing supplier IDs from the CSV file
-    csv_file_path = "./test_class_supplier.csv"  # Replace with the actual path to your CSV file
+    csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv" # Replace with the actual path to your CSV file
     existing_ids = set()
 # Création de la fenêtre principale
 def create_main_window():
@@ -1054,10 +1066,10 @@ def create_main_window():
                 if is_numeric_input(produit_id):
                     new_id = get_next_order_id()
                     
-                    df = pd.read_csv('./test_class_product.csv')
+                    df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv")
                     size = df.shape[0] + 1
                     df.loc[size] = [new_id, description, price, quantity_in_stock, historique]
-                    df.to_csv('./test_class_product.csv', index=False)
+                    df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", index=False)
                 
                     new_product = Product(new_id, description, price, quantity_in_stock, historique)
                     product_instances.append(new_product)
@@ -1079,9 +1091,9 @@ def create_main_window():
                     if product["Produit ID"] == item_id:
                         
                         
-                        df = pd.read_csv('./test_class_product.csv', sep = ',')
+                        df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", sep = ',')
                         df = df[df['product_id'] != item_id]
-                        df.to_csv('./test_class_product.csv', index=False)
+                        df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", index=False)
                         
                         
                         products_data.remove(product)
@@ -1108,7 +1120,7 @@ def create_main_window():
                         if selected_produit_id == product_id:
                             products_tree.item(selected_item, values=(product_id, description, price, quantity, historique))
                             
-                            df = pd.read_csv('./test_class_product.csv')
+                            df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv")
                             colonne_index = 'product_id'
                             df = df.set_index(colonne_index)
                             
@@ -1116,7 +1128,7 @@ def create_main_window():
                             df.loc[product_id] = nouvelles_valeurs
                             df.reset_index(inplace = True)
                             
-                            df.to_csv('./test_class_product.csv', index = False)
+                            df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_product_init.csv", index = False)
                             
                             messagebox.showinfo("Succès", "Commande modifiée avec succès.")
                         else:
@@ -1207,7 +1219,7 @@ def create_main_window():
             suppliers_tree.delete(*suppliers_tree.get_children())
 
             # Retrieve supplier data from the CSV file
-            csv_file_path = "./test_class_supplier.csv"  
+            csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv" 
 
             with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -1251,9 +1263,15 @@ def create_main_window():
                 # Retrieve values from the entry fields using specific entry variables
                 new_name = name_entry_supplier.get()
                 new_address = address_entry_supplier.get()
-                new_main_number = phone_entry_supplier.get()
+                new_main_number_value = phone_entry_supplier.get()
                 new_contact_person = contact_person_entry_supplier.get()
                 new_email = email_entry_supplier.get()
+
+                if len(new_main_number_value) == 11: 
+                    new_main_number = new_main_number_value  # if phone lenght = 11, no need to add 216
+                else:
+                    new_main_number = '216' + new_main_number_value  # add 216 in other cases
+
 
                 # Validate the phone number
                 if not is_valid_phone_number(new_main_number):
@@ -1272,7 +1290,7 @@ def create_main_window():
                 new_supplier = Supplier(new_id, new_name, new_address, new_main_number, new_contact_person, new_email)
 
                 # Insert the new supplier data into the CSV file
-                csv_file_path = "./test_class_supplier.csv"
+                csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv"
 
                 with open(csv_file_path, mode='a', newline='', encoding='utf-8') as csv_file:
                     csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -1298,7 +1316,7 @@ def create_main_window():
             supplier_id_to_delete = int(supplier_id_entry_supplier.get())  # Assume the ID to delete is entered in the supplier ID field
 
             # Read the existing data from the CSV file
-            csv_file_path = "./test_class_supplier.csv"
+            csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv"
 
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -1342,7 +1360,7 @@ def create_main_window():
             id_to_modify = int(supplier_id_entry_supplier.get())
 
             # Read the existing data from the CSV file
-            csv_file_path = "./test_class_supplier.csv"
+            csv_file_path = "C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_supplier_init.csv"
 
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -1490,9 +1508,357 @@ def create_main_window():
         
     def Clients():
         Clear_widgets(frame)
-        tk.Label(frame,text="Clients").pack()
+
+        def generate_new_client_id():
+            # Retrieve existing supplier IDs from the CSV file
+            deleted_clients_file_path = "./deleted_clients.csv"
+            client_file_path = "./test_class_client.csv"  # Replace with the actual path to your CSV file
+            existing_ids = set()
+            deleted_ids = set()
+
+            # reading the current ids
+            with open(client_file_path, newline='', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for client in reader:
+                    existing_ids.add(int(client['ID']))
+            
+            # reading the deleted ids
+            try:
+                with open(deleted_clients_file_path, newline='', encoding='utf-8') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for client in reader:
+                        deleted_ids.add(int(client['ID'])) 
+            except FileNotFoundError:
+                # if there is no deleted clients file, just ignore
+                pass
+
+            all_ids = existing_ids.union(deleted_ids)
+            new_id = max(all_ids, default=0) + 1
+            return new_id
+
+        def display_clients():
+            clients_tree.delete(*clients_tree.get_children())
+            if not clients_tree.get_children():
+                for client in clients_data:
+                    clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"]))
+        
+        def refresh_clients_table():
+            clients_tree.delete(*clients_tree.get_children())
+            for client in clients_data:
+                clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"]))
         
         
+        def double_click_client(event):
+            selected_item = clients_tree.focus()
+            if selected_item:
+                values = clients_tree.item(selected_item, "values")
+                if values:
+                    id_entry.delete(0, tk.END)
+                    client_name_entry.delete(0, tk.END)
+                    client_address_entry.delete(0,tk.END)
+                    email_entry.delete(0, tk.END)
+                    phone_entry.delete(0, tk.END)
+                    id_entry.insert(tk.END, values[0])
+                    client_name_entry.insert(tk.END, values[1])
+                    client_address_entry.insert(tk.END, values[2])
+                    email_entry.insert(tk.END, values[3])
+                    phone_entry.insert(tk.END, values[4])
+            
+        def delete_client():
+            selected_item = clients_tree.selection()
+            if selected_item:
+                item_id = clients_tree.item(selected_item)["values"][0]
+                df = pd.read_csv('./test_class_client.csv', sep = ',')
+
+                deleted_client = df[df['ID'] == item_id]
+                # add the deleted client to the deleted_clients csv file for archive
+                with open('./deleted_clients.csv', 'a', newline='') as f:
+                    deleted_client.to_csv(f, header=f.tell()==0, index=False)
+
+
+                df = df[df['ID'] != item_id]
+                df.to_csv('./test_class_client.csv', index=False)
+                for client in clients_data:
+                    if client["ID"] == item_id:
+                        clients_data.remove(client)
+                        break
+                
+                clients_tree.delete(selected_item)
+                refresh_client_ids()
+                refresh_clients_table()
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
+
+        
+        def add_client():
+            name = client_name_entry.get()
+            email = email_entry.get()
+            phone_entry_value = phone_entry.get()
+            address = client_address_entry.get()
+
+            if len(phone_entry_value) == 11:  # Vérifie si la longueur est de 11 chiffres
+                phone_number = phone_entry_value  # Utilise la valeur telle quelle
+            else:
+                phone_number = '216' + phone_entry_value  # Ajoute '216' au début
+
+            if not is_valid_phone_number(phone_number):
+                    messagebox.showerror("Erreur", "Le numéro de téléphone ne doit pas commencer par zéro et doit contenir 11 chiffres.")
+                    return  # Exit the function if the phone number is not valid
+   
+            if not is_valid_email(email):
+                    messagebox.showerror("Erreur", "L'adresse e-mail n'est pas valide. \n Format : ___@___.__")
+                    return  # Exit the function if the email address is not valid
+
+
+
+            if name and email and phone_number:
+                if is_numeric_input(phone_number):
+                    df = pd.read_csv('./test_class_client.csv')
+                    size = df.shape[0] + 1
+
+                    client_id= generate_new_client_id()
+                    new_client = Client(client_id, name, address, email, phone_number)
+
+                    df.loc[size] = [client_id, name, address, email, phone_number]
+                    df.to_csv('./test_class_client.csv', index = False)
+           
+           
+                    client_instances.append(new_client)
+                    clients_tree.insert("", tk.END, values=(client_id, name, address, email, phone_number))
+                    client_name_entry.delete(0, tk.END)
+                    client_address_entry.delete(0,tk.END)
+                    email_entry.delete(0, tk.END)
+                    phone_entry.delete(0, tk.END)
+                else:
+                    messagebox.showerror("Erreur", "Le numéro de téléphone doit être une valeur numérique.")
+            else:
+                messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+                messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+
+        def modify_client():
+            selected_item = clients_tree.selection()
+            if selected_item:
+                client_id = id_entry.get()
+                name = client_name_entry.get()
+                address = client_address_entry.get()
+                email = email_entry.get()
+                phone_number = phone_entry.get()
+
+                if client_id and name and email and phone_number:
+                    if is_numeric_input(client_id) and is_numeric_input(phone_number):
+                        client_id = int(client_id)
+                        selected_client_id = clients_tree.item(selected_item)["values"][0]
+                        if selected_client_id == client_id:
+                    
+                            df = pd.read_csv('./test_class_client.csv')
+                            colonne_index = 'ID'
+                            df = df.set_index(colonne_index)
+                            nouvelles_valeurs = {'Name': name, 'Address': address, 'Email': email, 'Phone Number': phone_number}
+                            df.loc[client_id] = nouvelles_valeurs
+                            df.reset_index(inplace = True)
+                    
+                            df.to_csv('./test_class_client.csv', index = False)
+                    
+                            clients_tree.item(selected_item, values=(client_id, name, address, email, phone_number))
+                            messagebox.showinfo("Succès", "Client modifié avec succès.")
+                    
+                        else:
+                            messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
+                    else:
+                        messagebox.showerror("Erreur", "Le numéro de téléphone et l'ID doivent être des valeurs numériques.")
+                else:
+                    messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
+
+        # def get_order_history():
+        #     selected_item = clients_tree.selection()
+        #     if selected_item:
+        #         client_id = id_entry.get()
+        #         name = client_name_entry.get()
+        #         email = email_entry.get()
+        #         phone_number = phone_entry.get()
+
+        #         if client_id and name and email and phone_number:
+        #             if is_numeric_input(client_id) and is_numeric_input(phone_number):
+        #                 client_id = int(client_id)
+        #                 selected_client_id = clients_tree.item(selected_item)["values"][0]
+        #                 if selected_client_id == client_id:
+                    
+        #                     client_orders = [order for order in orders_data if order["Client ID"] == client_id]
+                    
+        #                     for order in client_orders:
+        #                         orders_tree.insert("", tk.END, values=(
+        #                             order["Order ID"], order["Order Date"], order["Client ID"], order["Products"],
+        #                             order.get("Type de Transaction", ""), order.get("Statut", "")
+        #                         ))
+                    
+        #                 else:
+        #                     messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
+        #             else:
+        #                 messagebox.showerror("Erreur", "Le numéro de téléphone et l'ID doivent être des valeurs numériques.")
+        #         else:
+        #             messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+        #     else:
+        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
+
+
+        # def get_unpaid_orders():
+        #     selected_item = clients_tree.selection()
+        #     if selected_item:
+        #         client_id = id_entry.get()
+        #         name = client_name_entry.get()
+        #         email = email_entry.get()
+        #         phone_number = phone_entry.get()
+        
+        #         if client_id and name and email and phone_number :
+        #             if is_numeric_input(client_id) and is_numeric_input(phone_number):
+        #                 client_id = int(client_id)
+        #                 selected_client_id = clients_tree.item(selected_item)["values"][0]
+                
+        #                 if selected_client_id == client_id :
+        #                     client_orders = [order for order in orders_data if order["Client ID"] == client_id]
+        #                     unpaid_orders = [order for order in client_orders if order["Statut"] == "Non PAYE"]
+                    
+        #                     for order in unpaid_orders:
+        #                         orders_tree.insert("", tk.END, values=(
+        #                             order["Order ID"], order["Order Date"], order["Client ID"], order["Products"],
+        #                             order.get("Type de Transaction", ""), order.get("Statut", "")))
+                    
+        #                     if len(unpaid_orders) == 0:
+        #                         messagebox.showinfo("Information", "Ce client n'a pas de commandes impayées.")
+        #                 else:
+        #                     messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
+        #             else:
+        #                 messagebox.showerror("Erreur", "Le numéro de téléphone et l'ID doivent être des valeurs numériques.")
+        #         else:
+        #             messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+        #     else:
+        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
+
+
+        # def get_sales_history():
+        #     selected_client = clients_tree.selection()
+        #     if selected_client:
+        #         client_id = clients_tree.item(selected_client)["values"][0]  
+
+        #         client_sales = [sale for sale in sales_data if sale["Client ID"] == client_id]
+
+        
+        #         for item in sales_tree.get_children():
+        #             sales_tree.delete(item)
+
+        
+        #         for sale in client_sales:
+        #             sales_tree.insert("", tk.END, values=(
+        #                 sale["Sale Date"], sale["Product ID"], sale["Quantity Sold"], 
+        #                 sale["Sale Price"], sale["Client ID"]))
+
+        #         if len(client_sales) == 0:
+        #             messagebox.showinfo("Information", "Ce client n'a pas d'historique de ventes.")
+        #     else:
+        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client.")
+
+        
+        # def total_spent(start_date=None, end_date=None):
+        #     selected_client = clients_tree.selection()
+        #     if selected_client:
+        #         client_id = clients_tree.item(selected_client)["values"][0] 
+
+        
+        #         client_sales = [sale for sale in sales_data if sale["Client ID"] == client_id]
+        #         # Si des dates de début et de fin sont spécifiées, filtrer les ventes dans cette plage (à implémenter)
+        #         if start_date and end_date:
+        #             start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        #             end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+        #             client_sales = [sale for sale in client_sales if start_date <= datetime.datetime.strptime(sale["Sale Date"], "%Y-%m-%d") <= end_date]
+
+        #         # Calculate the total amount spent
+        #         total_amount = sum(float(sale["Sale Price"]) * int(sale["Quantity Sold"]) for sale in client_sales)
+
+        #         # Display 
+        #         messagebox.showinfo("Total dépensé", f"Le client {client_id} a dépensé un total de {total_amount:.2f} unités.")
+        #     else:
+        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client.")
+
+
+
+        titre_label = tk.Label(frame, text="Clients", font=("Arial", 16))
+        titre_label.pack(pady=5)
+        
+        columns_clients = ("ID", "Nom", "Address", "Email", "Numéro de téléphone")
+        
+        tree_frame = tk.Frame(frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical")
+        scrollbar.pack(side='right', fill='y')
+        
+        style = ttk.Style()
+        style.configure('Treeview', rowheight=25)
+        clients_tree = ttk.Treeview(tree_frame, columns=columns_clients, show="headings", style='Custom.Treeview')
+        
+        scrollbar.config(command=clients_tree.yview)    
+        clients_tree = ttk.Treeview(tree_frame, columns=columns_clients, show="headings", style='Custom.Treeview')
+        scrollbar.config(command=clients_tree.yview)
+        # clients_tree.pack(side='left', fill=tk.BOTH, expand=True)
+
+        for col in columns_clients:
+            clients_tree.heading(col, text=col)
+            clients_tree.column(col, width=150)
+    
+        clients_tree.pack(fill=tk.BOTH, expand=True, pady=5)
+        clients_tree.bind("<Double-1>", double_click_client)
+
+        input_frame_clients = tk.Frame(frame)
+        input_frame_clients.pack()
+
+        client_id_label = tk.Label(input_frame_clients, text="ID de client :")
+        client_id_label.pack(side=tk.LEFT, padx=5)
+        id_entry = tk.Entry(input_frame_clients, validate="key")
+        id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        id_entry.pack(side=tk.LEFT, padx=5)
+
+        name_label = tk.Label(input_frame_clients, text="Nom :")
+        name_label.pack(side=tk.LEFT, padx=5)
+        client_name_entry = tk.Entry(input_frame_clients)
+        client_name_entry.pack(side=tk.LEFT, padx=5)
+
+        client_address_label = tk.Label(input_frame_clients, text="Adresse :")
+        client_address_label.pack(side=tk.LEFT, padx=5)
+        client_address_entry = tk.Entry(input_frame_clients)
+        client_address_entry.pack(side=tk.LEFT, padx=5)
+    
+        email_label = tk.Label(input_frame_clients, text="E-mail :")
+        email_label.pack(side=tk.LEFT, padx=5)
+        email_entry = tk.Entry(input_frame_clients)
+        email_entry.pack(side=tk.LEFT, padx=5)
+    
+        phone_label = tk.Label(input_frame_clients, text="Numéro de téléphone :")
+        phone_label.pack(side=tk.LEFT, padx=5)
+        phone_entry = tk.Entry(input_frame_clients, validate="key")
+        phone_entry.config(validatecommand=(frame.register(validate_phone_number), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        phone_entry.pack(side=tk.LEFT, padx=5)
+
+        # buttons
+        button_frame_clients = tk.Frame(frame)
+        button_frame_clients.pack(pady=10)
+    
+        add_button_clients = tk.Button(button_frame_clients, text="Ajouter Client", command=add_client)
+        add_button_clients.pack(side=tk.LEFT, padx=5)
+    
+        delete_button_clients = tk.Button(button_frame_clients, text="Supprimer Client", command=delete_client)
+        delete_button_clients.pack(side=tk.LEFT, padx=5)
+    
+        modify_button_clients = tk.Button(button_frame_clients, text="Modifier Client", command=modify_client)
+        modify_button_clients.pack(side=tk.LEFT, padx=5)
+
+        display_clients = ctk.CTkButton(button_frame_clients, text="Liste des Clients", command=display_clients)
+        display_clients.pack(side=tk.LEFT, padx=5)
+
+
+
+
     #//////////////////////////// INTERFACE ORDER ///////////////////////////////////////////
         
     def orders():    
@@ -1521,10 +1887,10 @@ def create_main_window():
                         type_transaction_var.set("CHEQUE")  # Set default value for Type de Transaction
                         statut_var.set("PAYE")  # Set default value for Statut
 
-                        df = pd.read_csv('./test_class_order.csv')
+                        df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv")
                         size = df.shape[0] + 1
                         df.loc[size] = [new_id, order_date, client_id, products]
-                        df.to_csv('./test_class_order.csv', index=False)
+                        df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", index=False)
                     else:
                         messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
                 else:
@@ -1549,7 +1915,7 @@ def create_main_window():
                         selected_order_id = orders_tree.item(selected_item)["values"][0]
                         if selected_order_id == order_id:
                             
-                            df = pd.read_csv('./test_class_order.csv')
+                            df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv")
                             colonne_index = 'order_id'
                             df = df.set_index(colonne_index)
                             
@@ -1557,7 +1923,7 @@ def create_main_window():
                             df.loc[order_id] = nouvelles_valeurs
                             df.reset_index(inplace = True)
                             
-                            df.to_csv('./test_class_order.csv', index = False)
+                            df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", index = False)
                             
                             orders_tree.item(selected_item, values=(order_id, order_date, client_id, " | ".join([f"{prod.id} : {qty}" for prod, qty in products]), type_transaction, statut))
                             messagebox.showinfo("Succès", "Commande modifiée avec succès.")
@@ -1578,9 +1944,9 @@ def create_main_window():
                     if order["Order ID"] == order_id:
                         
                         
-                        df = pd.read_csv('./test_class_order.csv', sep = ',')
+                        df = pd.read_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", sep = ',')
                         df = df[df['order_id'] != order_id]
-                        df.to_csv('./test_class_order.csv', index=False)
+                        df.to_csv("C:/Users/Alexia/Desktop/Cours A4/S1/Pi2/Mission FORBETON/Mission FORBETON/test_class_order_init.csv", index=False)
                         
                         orders_data.remove(order)
                         break
