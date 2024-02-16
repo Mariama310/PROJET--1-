@@ -2336,70 +2336,31 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
 
-        # def get_order_history():
-        #     selected_item = clients_tree.selection()
-        #     if selected_item:
-        #         client_id = id_entry.get()
-        #         name = client_name_entry.get()
-        #         email = email_entry.get()
-        #         phone_number = phone_entry.get()
+        def search_client(attribute):
+            search_value = search_entry.get()
 
-        #         if client_id and name and email and phone_number:
-        #             if is_numeric_input(client_id) and is_numeric_input(phone_number):
-        #                 client_id = int(client_id)
-        #                 selected_client_id = clients_tree.item(selected_item)["values"][0]
-        #                 if selected_client_id == client_id:
-                    
-        #                     client_orders = [order for order in orders_data if order["Client ID"] == client_id]
-                    
-        #                     for order in client_orders:
-        #                         orders_tree.insert("", tk.END, values=(
-        #                             order["Order ID"], order["Order Date"], order["Client ID"], order["Products"],
-        #                             order.get("Type de Transaction", ""), order.get("Statut", "")
-        #                         ))
-                    
-        #                 else:
-        #                     messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
-        #             else:
-        #                 messagebox.showerror("Erreur", "Le numéro de téléphone et l'ID doivent être des valeurs numériques.")
-        #         else:
-        #             messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
-        #     else:
-        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
-
-
-        # def get_unpaid_orders():
-        #     selected_item = clients_tree.selection()
-        #     if selected_item:
-        #         client_id = id_entry.get()
-        #         name = client_name_entry.get()
-        #         email = email_entry.get()
-        #         phone_number = phone_entry.get()
+            with open('clients.csv', mode='r', encoding='utf-8') as file:
+                # Créer un objet reader pour lire le fichier CSV
+                csv_reader = csv.DictReader(file)
         
-        #         if client_id and name and email and phone_number :
-        #             if is_numeric_input(client_id) and is_numeric_input(phone_number):
-        #                 client_id = int(client_id)
-        #                 selected_client_id = clients_tree.item(selected_item)["values"][0]
-                
-        #                 if selected_client_id == client_id :
-        #                     client_orders = [order for order in orders_data if order["Client ID"] == client_id]
-        #                     unpaid_orders = [order for order in client_orders if order["Statut"] == "Non PAYE"]
-                    
-        #                     for order in unpaid_orders:
-        #                         orders_tree.insert("", tk.END, values=(
-        #                             order["Order ID"], order["Order Date"], order["Client ID"], order["Products"],
-        #                             order.get("Type de Transaction", ""), order.get("Statut", "")))
-                    
-        #                     if len(unpaid_orders) == 0:
-        #                         messagebox.showinfo("Information", "Ce client n'a pas de commandes impayées.")
-        #                 else:
-        #                     messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
-        #             else:
-        #                 messagebox.showerror("Erreur", "Le numéro de téléphone et l'ID doivent être des valeurs numériques.")
-        #         else:
-        #             messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
-        #     else:
-        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
+                # Initialiser une variable pour vérifier si on a trouvé au moins un client correspondant
+                found = False
+
+                # Initialiser une liste pour stocker les clients trouvés
+                found_clients = []
+
+                # Parcourir chaque ligne du fichier CSV
+                for row in csv_reader:
+                    # Vérifier si la valeur recherchée correspond à l'attribut spécifié (Nom ou ID)
+                    if search_value.lower() in row[attribute].lower():
+                        found_clients.append(row)
+        
+                        # Si aucun client correspondant n'a été trouvé, afficher un message
+                if not found:
+                    print("Aucun client correspondant à la recherche.")
+
+
+        
 
 
         # def get_sales_history():
@@ -2461,6 +2422,7 @@ def create_main_window():
         
         style = ttk.Style()
         style.configure('Treeview', rowheight=25)
+        global clients_tree
         clients_tree = ttk.Treeview(tree_frame, columns=columns_clients, show="headings", style='Custom.Treeview')
         
         scrollbar.config(command=clients_tree.yview)    
@@ -2505,9 +2467,18 @@ def create_main_window():
         phone_entry.config(validatecommand=(frame.register(validate_phone_number), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
         phone_entry.pack(side=tk.LEFT, padx=5)
 
+        search_label = tk.Label(input_frame_clients, text="Rechercher")
+        search_label.pack(side=tk.LEFT, padx=5)
+        search_entry = tk.Entry(input_frame_clients)
+        search_entry.pack(side=tk.LEFT, padx=5)
+
+
         # buttons
         button_frame_clients = tk.Frame(frame)
         button_frame_clients.pack(pady=10)
+
+        display_clients = ctk.CTkButton(button_frame_clients, text="Liste des Clients", command=display_clients)
+        display_clients.pack(side=tk.LEFT, padx=5)
     
         add_button_clients = tk.Button(button_frame_clients, text="Ajouter Client", command=add_client)
         add_button_clients.pack(side=tk.LEFT, padx=5)
@@ -2518,8 +2489,34 @@ def create_main_window():
         modify_button_clients = tk.Button(button_frame_clients, text="Modifier Client", command=modify_client)
         modify_button_clients.pack(side=tk.LEFT, padx=5)
 
-        display_clients = ctk.CTkButton(button_frame_clients, text="Liste des Clients", command=display_clients)
-        display_clients.pack(side=tk.LEFT, padx=5)
+        search_button = tk.Button(input_frame_clients, text="Rechercher", command=search_client(search_attribute))
+        search_button.pack()
+
+        # Créer un menu déroulant pour choisir l'attribut de recherche
+        search_attribute = tk.StringVar()
+        search_attribute.set("Name")  # Valeur par défaut
+        search_options = ttk.Combobox(input_frame_clients, textvariable=search_attribute)
+        search_options['values'] = ("Name", "ID")
+        search_options.pack()
+
+        exit_button = tk.Button(button_frame_clients, text="Quitter", command=frame.quit)
+        exit_button.pack(side=tk.LEFT, padx=5)
+
+        # get_order_history_button = tk.Button(button_frame_clients, text='Historique Commandes', command=get_order_history)
+        # get_order_history_button.pack(side=tk.LEFT, padx=5)
+
+        # unpaid_orders_button = tk.Button(button_frame_clients, text="Commandes impayées", command=get_unpaid_orders)
+        # unpaid_orders_button.pack(side=tk.LEFT, padx=5)
+
+        
+
+        
+
+        
+
+        
+
+        
 
 
 
@@ -2679,10 +2676,80 @@ def create_main_window():
                         order.get("type_transaction", ""), order.get("statut", "")
                     ))
         
+        # historique par client
+        def get_order_history():
+            selected_item = orders_tree.selection()
+            if selected_item:
+                client_id = order_client_id_entry.get()
+                # name = client_name_entry.get()
+                # email = email_entry.get()
+                # phone_number = phone_entry.get()
+
+                if client_id : # and name and email and phone_number:
+                    if is_numeric_input(client_id) : # and is_numeric_input(phone_number):
+                        client_id = int(client_id)
+                        selected_client_id = orders_tree.item(selected_item)["values"][2]
+                        if selected_client_id == client_id:
+                    
+                            client_orders = [order for order in orders_data if order["client_id"] == client_id]
+                    
+                            for order in client_orders:
+                                orders_tree.insert("", tk.END, values=(
+                                    order["Order ID"], order["Date de la commande"], order["Client ID"], order["Produits"],
+                                    order.get("Type de Transaction", ""), order.get("Statut", "")
+                                ))
+                    
+                        else:
+                            messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
+                    else:
+                        messagebox.showerror("Erreur", "L'ID doit être une valeur numérique.")
+                else:
+                    messagebox.showerror("Erreur", "Veuillez sélectionner un id client !")
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
+        
+
+
+        def get_unpaid_orders():
+            selected_item = orders_tree.selection()
+            if selected_item:
+                client_id = order_client_id_entry.get()
+                # name = client_name_entry.get()
+                # email = email_entry.get()
+                # phone_number = phone_entry.get()
+        
+                if client_id : # and name and email and phone_number :
+                    if is_numeric_input(client_id) : # and is_numeric_input(phone_number):
+                        client_id = int(client_id)
+                        selected_client_id = orders_tree.item(selected_item)["values"][2]
+                
+                        if selected_client_id == client_id :
+                            client_orders = [order for order in orders_data if order["client_id"] == client_id]
+                            unpaid_orders = [order for order in client_orders if order["statut"] == "Non PAYE"]
+                    
+                            for order in unpaid_orders:
+                                orders_tree.insert("", tk.END, values=(
+                                    order["Order ID"], order["Date de la commande"], order["Client ID"], order["Produits"],
+                                    order.get("Type de Transaction", ""), order.get("Statut", "")))
+                    
+                            if len(unpaid_orders) == 0:
+                                messagebox.showinfo("Information", "Ce client n'a pas de commandes impayées.")
+                        else:
+                            messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
+                    else:
+                        messagebox.showerror("Erreur", "L'ID doit être une valeur numérique.")
+                else:
+                    messagebox.showerror("Erreur", "Veuillez sélectionner un id client !")
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
+
+
+
         titre_label = tk.Label(frame, text="Orders", font=("Arial", 16))
         titre_label.pack(pady=5)
 
         columns = ("Order ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Statut")
+        global orders_tree
         orders_tree = ttk.Treeview(frame, columns=columns, show="headings")
 
         for col in columns:
@@ -2750,6 +2817,12 @@ def create_main_window():
         tk.Button(button_frame_orders, text="Supprimer Commande", command=delete_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Modifier Commande", command=modify_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Créer un Bon de Commande", command=lambda: getOrderById(int(order_id_entry.get())).CreateBDC()).pack(side=tk.LEFT, padx=5)
+
+        get_order_history_button = tk.Button(button_frame_orders, text='Historique Commandes', command=get_order_history)
+        get_order_history_button.pack(side=tk.LEFT, padx=5)
+
+        unpaid_orders_button = tk.Button(button_frame_orders, text="Commandes impayées", command=get_unpaid_orders)
+        unpaid_orders_button.pack(side=tk.LEFT, padx=5)
         
 
         #////////////////////////////  FIN INTERFACE ORDER ///////////////////////////////////////////
