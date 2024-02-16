@@ -4,18 +4,20 @@ from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 import re
-import customtkinter as ctk
+import customtkinter as ctk 
 from datetime import date
 import csv
 import datetime
-
+from tkcalendar import DateEntry 
+import os
 
 #   pip install python-docx (for editing words)
 from docx import Document
 from docx.shared import Pt, RGBColor #text size, color
 from docx.enum.text import WD_ALIGN_PARAGRAPH #paragraph alignment
-
-from tkcalendar import Calendar #pip install tkcalendar
+from docx.shared import Inches
+import comtypes.client
+from datetime import datetime
 
 ctk.deactivate_automatic_dpi_awareness()
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -562,10 +564,10 @@ class Invoice:
         self._products = products
     products=property(get_products,set_products)
 
-class Livraison:
+class livraison:
     def __init__(self, shipping_nbr, client_name, cin, shipping_address, phone_nbr, order_nbr, order_date, 
                  central_dep_hr, central_arr_hr, worksite_arr_hr, worksite_dep_hr, product_id, quantity, 
-                 product_type, vehicle, total_ttc):
+                 product_type, vehicle, total_ttc, pompe1, pompe2, chauffeur, quantity_adju, livraison_date):
         self._shipping_nbr = shipping_nbr
         self._client_name = client_name
         self._cin = cin
@@ -575,126 +577,144 @@ class Livraison:
         self._order_date = order_date
         self._central_dep_hr = central_dep_hr
         self._central_arr_hr = central_arr_hr
-        self._worksite_arr_hr = worksite_arr_hr # retirer les heures d'arriver et de départ du lieu de livraison car il faut simplement le temps total qu'il a fallu mobiliser un vehicule
-        self._worksite_dep_hr = worksite_dep_hr #
+        self._worksite_arr_hr = worksite_arr_hr
+        self._worksite_dep_hr = worksite_dep_hr
         self._product_id = product_id
         self._quantity = quantity
-        self._product_type = product_type # à retirer car accessible depuis product_id
+        self._product_type = product_type 
         self._vehicle = vehicle
-        self._total_ttc = total_ttc # à retirer plus facil à calculer que de stocker
+        self._total_ttc = total_ttc
+        self._pompe1 = pompe1
+        self._pompe2 = pompe2
+        self._chauffeur = chauffeur
+        self._quantity_adju = quantity_adju
+        self._livraison_date = livraison_date
+
+
+    def pompe1(self):
+        return self._pompe1
+    
+    def Pompe1(self, pompe1):
+        self._pompe1 = pompe1
         
-    def __init__(self, shipping_nbr, client_name, shipping_address, phone_nbr, order_nbr, order_date, 
-                 central_dep_hr, central_arr_hr, worksite_arr_hr, worksite_dep_hr, product_id, quantity, 
-                 product_type, vehicle, total_ttc):
-        self._shipping_nbr = shipping_nbr
-        self._client_name = client_name
-        self._shipping_address = shipping_address
-        self._phone_nbr = phone_nbr
-        self._order_nbr = order_nbr
-        self._order_date = order_date
-        self._central_dep_hr = central_dep_hr
-        self._central_arr_hr = central_arr_hr
-        self._worksite_arr_hr = worksite_arr_hr # retirer les heures d'arriver et de départ du lieu de livraison car il faut simplement le temps total qu'il a fallu mobiliser un vehicule
-        self._worksite_dep_hr = worksite_dep_hr #
-        self._product_id = product_id
-        self._quantity = quantity
-        self._product_type = product_type # à retirer car accessible depuis product_id
-        self._vehicle = vehicle
-        self._total_ttc = total_ttc # à retirer plus facil à calculer que de stocker
+    def pompe2(self):
+        return self._pompe2
+    
+    def Pompe2(self, pompe2):
+        self._pompe2 = pompe2
+
+    def chauffeur(self):
+        return self._chauffeur
+    
+    def Chauffeur(self, chauffeur):
+        self._chauffeur = chauffeur
+        
+    def quantity_adju(self):
+        return self._quantity_adju
+    
+    def Quantity_adju(self, quantity_adju):
+        self._quantity_adju = quantity_adju
+
+    def livraison_date(self):
+        return self._livraison_date
+    
+    def Livraison_date(self, livraison_date):
+        self._livraison_date = livraison_date
         
     def shipping_nbr(self):
         return self._shipping_nbr
     
-    def shipping_nbr(self, shipping_nbr):
-        self._shipping_nbr = shipping_nbr
-        
+    def Shipping_nbr(self, shipping_nbr):
+        self._shipping_nbr = shipping_nbr    
+         
+    
     def client_name(self):
         return self._client_name
     
-    def client_name(self, client_name):
+    def Client_name(self, client_name):
         self._client_name = client_name
         
     def cin(self):
         return self._cin
     
-    def cin(self, cin):
+    def Cin(self, cin):
         self._cin = cin
         
     def shipping_address(self):
         return self._shipping_address
     
-    def shipping_address(self, shipping_address):
+    def Shipping_address(self, shipping_address):
         self._shipping_address = shipping_address
         
     def phone_nbr(self):
         return self._phone_nbr
     
-    def phone_nbr(self, phone_nbr):
+    def Phone_nbr(self, phone_nbr):
         self._phone_nbr = phone_nbr
         
     def order_nbr(self):
         return self._order_nbr
     
-    def order_nbr(self, order_nbr):
+    def Order_nbr(self, order_nbr):
         self._order_nbr = order_nbr
         
     def order_date(self):
         return self._order_date
     
-    def order_date(self, order_date):
+    def Order_date(self, order_date):
         self._order_date = order_date
         
     def central_dep_hr(self):
         return self._central_dep_hr
     
-    def central_dep_hr(self, central_dep_hr):
+    def Central_dep_hr(self, central_dep_hr):
         self._central_dep_hr = central_dep_hr
         
     def central_arr_hr(self):
         return self._central_arr_hr
     
-    def central_arr_hr(self, central_arr_hr):
+    def Central_arr_hr(self, central_arr_hr):
         self._central_arr_hr = central_arr_hr
         
     def worksite_arr_hr(self):
         return self._worksite_arr_hr
     
-    def worksite_arr_hr(self, worksite_arr_hr):
+    def Worksite_arr_hr(self, worksite_arr_hr):
         self._worksite_arr_hr = worksite_arr_hr
         
     def worksite_dep_hr(self):
         return self._worksite_dep_hr
     
-    def worksite_dep_hr(self, worksite_dep_hr):
+    def Worksite_dep_hr(self, worksite_dep_hr):
         self._worksite_dep_hr = worksite_dep_hr
 
     def product_id(self):
         return self._product_id
 
-    def product_id(self, product_id):
+    def Product_id(self, product_id):
         self._product_id = product_id
     def quantity(self):
         return self._quantity
     
-    def quantity(self, quantity):
+    def Quantity(self, quantity):
         self._quantity = quantity
         
     def product_type(self):
         return self._product_type
     
-    def product_type(self, product_type):
+    def Product_type(self, product_type):
         self._product_type = product_type
 
     def vehicle(self):
         return self._vehicle
     
-    def vehicle(self, vehicle):
+    def Vehicle(self, vehicle):
         self._vehicle = vehicle
         
     def total_ttc(self):
         return self._total_ttc
     
-    def total_ttc(self, total_ttc):
+    def Total_ttc(self, total_ttc):
         self._total_ttc = total_ttc
 
     def afficher_details(self):
@@ -715,6 +735,7 @@ class Livraison:
         print(f"Vehicle : {self._vehicle}")
         print(f"Total TTC : {self._total_ttc}")
 
+    
 #general functions to get objects by id    
 def getClientById(id):
     for client in client_instances:
@@ -1494,6 +1515,659 @@ def create_main_window():
         Clear_widgets(frame)
         tk.Label(frame,text="Deliveries").pack()
         
+        def supress_livraison():
+    
+            def on_no():
+                root.destroy()
+
+            def real_suppress():
+
+                selected_item = livraison_tree.selection()
+                shp_nbr = livraison_tree.item(selected_item)["values"][0]
+                
+                with open('livraison_data.csv', 'r', newline='') as file:
+                    reader = csv.reader(file, delimiter=',')
+                    lines = list(reader)
+
+                # Find and remove the specified ID from the first column
+                updated_lines = [','.join(row) for row in lines if str(shp_nbr) != str(row[0])]
+
+                # Write the updated values back to the CSV file
+                with open('livraison_data.csv', 'w', newline='') as file:
+                    file.write('\n'.join(updated_lines))
+                display_livraison()   
+                root.destroy()
+
+            root = tk.Tk()
+            root.title("Confiramtion")
+            root.geometry('350x150')
+
+            label = tk.Label(root, text="Voulez vous vraiment supprimer cette livraison ?")
+            label.pack(pady=10)
+
+            yes_button = tk.Button(root, text="OUI", command=real_suppress)
+            yes_button.pack(side=tk.LEFT, padx=95)
+
+            no_button = tk.Button(root, text="NON", command=on_no)
+            no_button.pack(side=tk.LEFT, padx=5) 
+        
+
+        def double_click_livraison(event):
+            selected_item = livraison_tree.focus()
+            if selected_item:
+                values = livraison_tree.item(selected_item, "values")
+                if values:
+                    n_entry.delete(0, tk.END)
+                    name_entry.delete(0, tk.END)
+                    adress_entry.delete(0, tk.END)
+                    prod_entry.delete(0, tk.END)
+                    n_entry.insert(tk.END, values[0])
+                    name_entry.insert(tk.END, values[1])
+                    adress_entry.insert(tk.END, values[2])
+                    prod_entry.insert(tk.END, values[3])
+        
+        def modify_livraison():
+            selected_item = livraison_tree.selection()
+            shp_nbr = livraison_tree.item(selected_item)["values"][0]
+            mod_line=[]
+            with open('livraison_data.csv', 'r', newline='') as file:
+                    reader = csv.reader(file, delimiter=',')
+                    lines = list(reader)
+            for row in lines :
+                if str(row[0])==str(shp_nbr):
+                    mod_line=row
+            n_entry.insert(tk.END, row[0])
+            page_livraison(2)
+
+        def replace_placeholder_with_value(run, value):
+            run.clear()  # Clear existing content
+            run.add_text(value)  # Add the new text
+
+        def remplir_template(livraison):
+            # Charger le document Word existant (le modèle)
+            doc = Document("TEMPLATE_Bon_de_livraison.docx")
+
+            # Remplacer les espaces réservés dans les paragraphes
+            for paragraph in doc.paragraphs:
+                for run in paragraph.runs:
+                    if "<<INSERT_ORDER_NUMBER_HERE>>" in run.text:
+                        replace_placeholder_with_value(run, str(livraison.shipping_nbr()))
+                    if "<<INSERT_DATE_HERE>>" in run.text:
+                        replace_placeholder_with_value(run, str(livraison.livraison_date()))
+                    if "INSERTCLIENTCINMEF_HERE" in run.text:
+                        replace_placeholder_with_value(run, str(livraison.cin()))
+                    if "<<INSERT_CLIENT_NAME_HERE>>" in run.text:
+                        replace_placeholder_with_value(run, livraison.client_name())
+                    if "DD" in run.text:
+                        replace_placeholder_with_value(run, str(livraison.order_date()))
+                    if "TEL" in run.text:
+                        replace_placeholder_with_value(run, str(livraison.phone_nbr()))
+                    if "ORDERNUM" in run.text:
+                        replace_placeholder_with_value(run, str(livraison.order_nbr()))
+                    if "UU" in run.text:
+                        replace_placeholder_with_value(run, str(livraison.shipping_address()))
+
+            # Remplacer les espaces réservés dans les cellules des tableaux
+            for table in  doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        for run in cell.paragraphs[0].runs:
+                            if "HH" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.central_dep_hr()))
+                            if "RR" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.central_arr_hr()))
+                            if "AA" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.worksite_arr_hr()))
+                            if ".Chanti" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.worksite_dep_hr()))
+                            if "INSERT_Type_HERE" in run.text:
+                                replace_placeholder_with_value(run, livraison.product_type())
+                            if "INSERT_Qte_HERE" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.quantity()))
+                            if "TT" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.pompe1()))
+                            if "INSERT_Tickl_HERE" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.pompe2()))
+                            if "INSERT_Nature_HERE" in run.text:
+                                replace_placeholder_with_value(run, livraison.product_type())
+                            if "INSERT_Nature_HERE" in run.text:
+                                replace_placeholder_with_value(run, livraison.product_type())
+                            if "INSERT_Tel_HERE" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.quantity_adju()))
+                            if "INSERT_Mat_HERE" in run.text:
+                                replace_placeholder_with_value(run, livraison.vehicle())
+                            if "INSERT_Chauff_HERE" in run.text:
+                                replace_placeholder_with_value(run, livraison.chauffeur())
+                            if "INSERT_Total_HERE" in run.text:
+                                replace_placeholder_with_value(run, str(livraison.total_ttc()))
+
+            out = str(livraison.shipping_nbr()) + ".docx"
+
+            # Sauvegarder le document rempli
+            doc.save(out)
+
+        def convert_docx_to_pdf(docx_filename, pdf_filename):
+            # Create a Word application object
+                
+            current_directory = os.getcwd()
+
+            # Create absolute paths from the relative paths
+            absolute_input_path = os.path.join(current_directory, docx_filename)
+            absolute_output_path = os.path.join(current_directory, pdf_filename)
+            # Create a Word application object
+            word = comtypes.client.CreateObject("Word.Application")
+            
+            # Open the Word document
+            doc = word.Documents.Open(absolute_input_path)
+            
+            # Save the document as PDF
+            doc.SaveAs(absolute_output_path, FileFormat=17)  # 17 represents the PDF format
+            
+            # Close the Word document and application
+            doc.Close()
+            word.Quit()
+
+
+        def page_livraison(R):
+
+            def mod_livraison(shp_nbr):
+            
+                shipping_nbr = n_entry.get()
+                nouvelles_donnees = []
+                
+                if(str(shp_nbr)==str(shipping_nbr)):
+                    client_name = name_entry.get()
+                    cin = cin_entry.get()
+                    shipping_address = adress_entry.get()
+                    phone_nbr = phone_nbr_entry.get()
+                    order_nbr = order_entry.get()
+                    order_date = order_date_entry.get_date() 
+                    order_date_l= order_date_l_entry.get_date() 
+                    central_dep_hr = central_dep_hr_combobox.get()
+                    central_arr_hr = central_arr_hr_combobox.get()
+                    worksite_dep_hr = worksite_dep_hr_combobox.get()
+                    worksite_arr_hr = worksite_arr_hr_combobox.get()    
+                    product_id = prod_entry.get()
+                    adjuvant=adjuvant_combobox.get()
+                    quantity = quantite_entry.get()
+                    quantity_a = quantity_a_entry.get()
+                    vehicle = matricule_entry.get()
+                    total_ttc = total_ttc_entry.get()
+                    chauffeur = chauffeur_combobox.get()
+                    variable1 = variable1_combobox.get() 
+
+
+                    if (shipping_nbr and client_name and cin and shipping_address and phone_nbr and order_nbr and order_date and central_dep_hr and central_arr_hr and
+                    worksite_dep_hr and worksite_arr_hr and product_id and quantity and vehicle and total_ttc and chauffeur and adjuvant and order_date_l and quantity_a and variable1):
+                        
+                        with open('livraison_data.csv', 'r', newline='') as file:
+                                reader = csv.reader(file, delimiter=',')
+                                lines = list(reader)
+                        for row in lines :
+                            if str(row[0])==str(shp_nbr):
+                                row[1]=client_name
+                                row[2]=cin
+                                row[3]=shipping_address
+                                row[4]=phone_nbr
+                                row[5]=order_nbr
+                                row[6]=order_date
+                                row[7]=central_dep_hr
+                                row[8]=central_arr_hr
+                                row[9]=worksite_dep_hr
+                                row[10]=worksite_arr_hr
+                                row[11]=product_id
+                                row[12]=total_ttc
+                                row[13]=adjuvant
+                                row[14]=vehicle
+                                row[15]=quantity
+                                if variable1 == "OUI":
+                                    row[16] ="X"
+                                else:row[16]=" " 
+                                if row[16]=='X': row[17]=' ' 
+                                else : row[17]='X'
+                                row[18]=chauffeur
+                                row[19]=quantity_a
+                                row[20]=order_date_l
+                                nouvelles_donnees.append(row)
+                            else:
+                                nouvelles_donnees.append(row)
+                        with open('livraison_data.csv', 'w', newline='') as fichier_csv:
+                            ecrivain_csv = csv.writer(fichier_csv)
+                            ecrivain_csv.writerows(nouvelles_donnees)
+                        root.withdraw()   
+                        root.after(100, root.destroy)
+                        display_livraison()
+                        n_entry.delete(0, 'end')
+                        name_entry.delete(0, 'end')
+                        adress_entry.delete(0, 'end')
+                        prod_entry.delete(0, 'end') 
+                    else: messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+                else: messagebox.showerror("Erreur", "L'ID de la livraison ne peut pas être modifié.")
+                    
+
+
+
+            def add_livraison():
+            
+                shipping_nbr = n_entry.get()
+                client_name = name_entry.get()
+                cin = cin_entry.get()
+                shipping_address = adress_entry.get()
+                phone_nbr = phone_nbr_entry.get()
+                order_nbr = order_entry.get()
+                order_date = order_date_entry.get_date() 
+                order_date_l= order_date_l_entry.get_date() 
+                central_dep_hr = central_dep_hr_combobox.get()
+                central_arr_hr = central_arr_hr_combobox.get()
+                worksite_dep_hr = worksite_dep_hr_combobox.get()
+                worksite_arr_hr = worksite_arr_hr_combobox.get()    
+                product_id = prod_entry.get()
+                adjuvant=adjuvant_combobox.get()
+                quantity = quantite_entry.get()
+                quantity_a = quantity_a_entry.get()
+                vehicle = matricule_entry.get()
+                total_ttc = total_ttc_entry.get()
+                chauffeur = chauffeur_combobox.get()
+                variable1 = variable1_combobox.get() 
+                if variable1 == "OUI":
+                    variable1 ="X"
+                else: variable1=" "
+                variable2 = "X" if variable1 == " " else " " 
+
+                if (shipping_nbr and client_name and cin and shipping_address and phone_nbr and order_nbr and order_date and central_dep_hr and central_arr_hr and
+                    worksite_dep_hr and worksite_arr_hr and product_id and quantity and
+                    vehicle and total_ttc and chauffeur and adjuvant and order_date_l 
+                    and quantity_a and variable1):
+
+                    if is_numeric_input(shipping_nbr):
+
+                        data_string = f"{shipping_nbr},{client_name},{cin},{shipping_address},{phone_nbr}," \
+                                    f"{order_nbr},{order_date},{central_dep_hr},{central_arr_hr}," \
+                                    f"{worksite_arr_hr},{worksite_dep_hr},{product_id},{quantity},{adjuvant},{vehicle},{total_ttc},{variable1},{variable2}," \
+                                    f"{chauffeur},{quantity_a},{order_date_l}"
+
+                        # Create or open the CSV file in write mode
+                        with open('livraison_data.csv', mode='a', newline='') as file:
+                            writer = csv.writer(file, delimiter=';')
+
+                            # Write the data to the CSV file
+                            writer.writerow([data_string])
+                        # Clear the entry fields after writing to CSV
+                        root.withdraw()   
+                        root.after(100, root.destroy)
+                        n_entry.delete(0, 'end')
+                        name_entry.delete(0, 'end')
+                        adress_entry.delete(0, 'end')
+                        prod_entry.delete(0, 'end') 
+                        order_entry.delete(0, 'end')
+                        display_livraison()
+                    else: messagebox.showerror("Erreur", "Le numéro de livraison doit-être un chiffre !")
+                else:
+                    messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+                
+            # Création de la fenêtre principale
+            root = tk.Tk()
+            root.title("Générateur de Bon de livraison")
+            root.geometry('400x800')
+            
+            order_nbr = order_entry.get()
+            client_name = name_entry.get()
+
+            
+            order_date_label = tk.Label(root, text="Date du bon de commande :")
+            order_date_label.pack()
+            order_date_entry = DateEntry(root, date_pattern="yyyy-mm-dd")
+            order_date_entry.pack()
+
+            order_date_l_label = tk.Label(root, text="Date du bon de livraison :")
+            order_date_l_label.pack()
+            order_date_l_entry = DateEntry(root, date_pattern="yyyy-mm-dd")
+            order_date_l_entry.pack()
+
+            adress_label = tk.Label(root, text="adresse :")
+            adress_label.pack()
+            adress_entry = tk.Entry(root)
+            adress_entry.pack()
+
+            phone_nbr_label = tk.Label(root, text="Phone Number:")
+            phone_nbr_label.pack()
+            phone_nbr_entry = tk.Entry(root)
+            phone_nbr_entry.pack()
+
+            cin_label = tk.Label(root, text="CIN:")
+            cin_label.pack()
+            cin_entry = tk.Entry(root)
+            cin_entry.pack()  
+
+            hours_label = tk.Label(root, text="Heure de départ centrale :")
+            hours_label.pack()
+            central_dep_hr_combobox = ttk.Combobox(root, values=["00:00"])  # Add your desired values
+            central_dep_hr_combobox.pack()
+
+            
+            hours_label = tk.Label(root, text="Heure d'arrivée centrale :")
+            hours_label.pack()
+            central_arr_hr_combobox = ttk.Combobox(root, values=["00:00"])  # Add your desired values
+            central_arr_hr_combobox.pack()
+
+            hours_label = tk.Label(root, text="Heure de départ du site :")
+            hours_label.pack()
+            worksite_dep_hr_combobox = ttk.Combobox(root, values=["00:00"])  # Add your desired values
+            worksite_dep_hr_combobox.pack()
+
+            hours_label = tk.Label(root, text="Heure d'arrivée sur site :")
+            hours_label.pack()
+            worksite_arr_hr_combobox = ttk.Combobox(root, values=["00:00"])  # Add your desired values
+            worksite_arr_hr_combobox.pack()
+            
+            # Zone de saisie pour la quantité
+            quantite_label = tk.Label(root, text="Quantité :")
+            quantite_label.pack()
+            quantite_entry = tk.Entry(root)
+            quantite_entry.pack()
+
+            
+            adjuvant_label = tk.Label(root, text="Adjuvant :")
+            adjuvant_label.pack()
+            adjuvant_combobox = ttk.Combobox(root, values=["Adjuvant 1", "Adjuvant 2", "Adjuvant 3"])  
+            adjuvant_combobox.pack()
+
+            quantity_a_label = tk.Label(root, text="Quantité d'adjuvant :")
+            quantity_a_label.pack()
+            quantity_a_entry = tk.Entry(root)
+            quantity_a_entry.pack()
+
+            variable1_label = tk.Label(root, text="Pompé :")
+            variable1_label.pack()
+            variable1_combobox = ttk.Combobox(root, values=["OUI", "NON"])  # Add your desired values
+            variable1_combobox.pack()
+
+        
+            # Zone de saisie pour le camion
+            matricule_label = tk.Label(root, text="Matricule :")
+            matricule_label.pack()
+            matricule_entry = ttk.Combobox(root, values=["Matricule 1", "Matricule 2", "Matricule 3"])
+            matricule_entry.pack()
+            
+            chauffeur_label = tk.Label(root, text="Chauffeur :")
+            chauffeur_label.pack()
+            chauffeur_combobox = ttk.Combobox(root, values=["Chauffeur 1", "Chauffeur 2", "Chauffeur 3"])  
+            chauffeur_combobox.pack()
+            
+
+            total_ttc_label = tk.Label(root, text="Total TTC:")
+            total_ttc_label.pack()
+            total_ttc_entry = tk.Entry(root)
+            total_ttc_entry.pack()
+
+            variable3_label = tk.Label(root, text="Signé :")
+            variable3_label.pack()
+            variable3_combobox = ttk.Combobox(root, values=["OUI", "NON"])  # Add your desired values
+            variable3_combobox.pack()
+
+            
+            
+            # Bouton pour générer le bon de livraison
+            if R==2:
+                selected_item = livraison_tree.selection()
+                shp_nbr = livraison_tree.item(selected_item)["values"][0]
+                generer_button = tk.Button(root, text="Modifier livraison",command=lambda : mod_livraison(shp_nbr))
+                generer_button.pack()
+            else:
+                generer_button = tk.Button(root, text="Ajouter la livraison",command=add_livraison)
+                generer_button.pack()
+            
+            # MODIfier livraison
+            if R==2:
+                selected_item = livraison_tree.selection()
+                shp_nbr = livraison_tree.item(selected_item)["values"][0]
+                mod_line=[]
+                with open('livraison_data.csv', 'r', newline='') as file:
+                        reader = csv.reader(file, delimiter=',')
+                        lines = list(reader)
+                for row in lines :
+                    if str(row[0])==str(shp_nbr):
+                        mod_line=row
+                n_entry.delete(0, tk.END)
+                n_entry.insert(tk.END, mod_line[0])
+
+                name_entry.delete(0, tk.END)
+                name_entry.insert(tk.END, mod_line[1])
+
+                cin_entry.delete(0, tk.END)
+                cin_entry.insert(tk.END, mod_line[2])
+
+                adress_entry.delete(0, tk.END)
+                adress_entry.insert(tk.END, mod_line[3])
+
+                phone_nbr_entry.delete(0, tk.END)
+                phone_nbr_entry.insert(tk.END, mod_line[4])
+
+                order_entry.delete(0, tk.END)
+                order_entry.insert(tk.END, mod_line[5])
+        
+                order_date_entry.set_date(mod_line[6])
+
+                central_dep_hr_combobox.set(mod_line[7])
+
+                central_arr_hr_combobox.set(mod_line[8])
+
+                worksite_arr_hr_combobox.set(mod_line[10])
+
+                worksite_dep_hr_combobox.set(mod_line[9])
+
+                prod_entry.delete(0, tk.END)
+                prod_entry.insert(tk.END, mod_line[11])
+
+                adjuvant_combobox.set(mod_line[13])
+
+                quantite_entry.delete(0, tk.END)
+                quantite_entry.insert(tk.END, mod_line[15])
+
+                quantity_a_entry.delete(0, tk.END)
+                quantity_a_entry.insert(tk.END, mod_line[19])
+
+                matricule_entry.delete(0, tk.END)
+                matricule_entry.insert(tk.END, mod_line[14])
+
+                total_ttc_entry.delete(0, tk.END)
+                total_ttc_entry.insert(tk.END, mod_line[12])
+
+                chauffeur_combobox.set(mod_line[18])
+                if mod_line[16]=='X' : variable1_combobox.set('OUI')
+                else : variable1_combobox.set('NON')
+                order_date_l_entry.set_date(mod_line[20])
+            
+            else:
+                if order_nbr:
+                    with open('test_class_order.csv', 'r', newline='') as file:
+                        reader = csv.reader(file, delimiter=',')
+                        lines = list(reader)
+                    for row in lines :
+                        if str(row[0])==str(order_nbr):
+                            mod_line=row
+                    original_date_str = mod_line[1].replace('/', '-')
+                    
+                    
+
+                    order_date_entry.set_date(original_date_str)
+
+                if client_name:
+                    with open('test_class_client.csv', 'r', newline='') as file:
+                        reader = csv.reader(file, delimiter=',')
+                        lines = list(reader)
+                    for row in lines :
+                        if str(row[1])==str(client_name):
+                            mod_line=row
+                    phone_nbr_entry.insert(tk.END, mod_line[3])
+                    adress_entry.insert(tk.END, mod_line[2])
+
+            # Lancement de l'application
+            root.mainloop()
+
+        def bon_livraison():
+          
+            selected_item = livraison_tree.selection()
+            shp_nbr = livraison_tree.item(selected_item)["values"][0]
+            livraison_instances = []
+            if shp_nbr:
+                with open('livraison_data.csv', 'r') as file:
+                    reader = csv.reader(file, delimiter=',')
+                    # Skip the header row
+                    next(reader)
+                    for row in reader:
+                        # Instantiate a Livraison object for each row
+                        livraison_instance = livraison(*row)
+                        livraison_instances.append(livraison_instance)
+
+                    for ligne in livraison_instances:
+                    
+                            if int(shp_nbr)== int(ligne.shipping_nbr()):
+
+                                remplir_template(ligne)
+                
+                                convert_docx_to_pdf(str(ligne.shipping_nbr())+'.docx', str(ligne.shipping_nbr())+'.pdf')
+                            
+        
+        def display_livraison():
+    # Clear existing data in the tree
+            livraison_tree.delete(*livraison_tree.get_children())
+            
+            # Read data from the CSV file
+            with open('livraison_data.csv', 'r') as file:
+            
+                reader = csv.reader(file, delimiter=',')
+                next(reader)
+                for livraison in reader:
+                    # Display specific columns (adjust the column indices based on your CSV structure)
+                    livraison_tree.insert("", tk.END, values=(livraison[0], livraison[1], livraison[3], livraison[11]))
+
+       
+        entry_var = tk.StringVar()
+        titre_label = tk.Label(frame, text="Livraison", font=("Arial", 16))
+        titre_label.pack(pady=5)
+        
+        columns_livraison = ("N° de livraison", "Client", "Adresse", "ID produit")
+        
+        tree_frame = tk.Frame(frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical")
+        scrollbar.pack(side='right', fill='y')
+
+        style = ttk.Style()
+        style.configure('Treeview', rowheight=25)
+
+        
+        livraison_tree = ttk.Treeview(tree_frame, columns=columns_livraison, show="headings", style='Custom.Treeview')
+
+        scrollbar.config(command=livraison_tree.yview)
+
+        
+        for col in columns_livraison:
+            livraison_tree.heading(col, text=col)
+            livraison_tree.column(col, width=150)
+        
+        livraison_tree.pack(fill=tk.BOTH, expand=True, pady=10)
+        livraison_tree.bind("<Double-1>", double_click_livraison)
+
+        class AutocompleteEntry(ttk.Combobox):
+            def set_completion_list(self, completion_list):
+                self._completion_list = sorted(completion_list)
+                self._hits = []
+                self.position = 0
+                self.bind('<KeyRelease>', self.handle_keyrelease)
+                self['values'] = self._completion_list
+
+            def autocomplete(self, delta=0):
+                if delta:
+                    self.delete(self.position, tk.END)
+                else:
+                    self.position = len(self.get())
+
+                _hits = []
+                for item in self._completion_list:
+                    if item.lower().startswith(self.get().lower()):
+                        _hits.append(item)
+
+                if _hits != self._hits:
+                    self._hits = _hits
+                    self['values'] = _hits
+
+            def handle_keyrelease(self, event):
+                if event.keysym in ('BackSpace', 'Left', 'Right', 'Up', 'Down', 'Shift', 'Control'):
+                    return
+
+                if event.keysym == 'Return':
+                    self._hits = []
+                    return
+
+                if event.keysym in ('BackSpace', 'Left', 'Right'):
+                    self.autocomplete(-1)
+                else:
+                    self.autocomplete()
+
+        def load_names_from_csv(csv_file):
+            names = []
+            with open(csv_file, 'r') as file:
+                reader = csv.reader(file, delimiter=',')
+                next(reader)  # Skip header
+                for row in reader:
+                    names.append(row[1])  # Assuming names are in the first column
+            return names
+
+        def on_select(event):
+            value = entry_var.get()
+            print(f"Selected: {value}")
+
+        names_list=load_names_from_csv('test_class_client.csv')
+
+        # Add the labels and input fields for adding/modifying a client
+        input_frame_livraison = tk.Frame(frame)
+        input_frame_livraison.pack()
+        
+        n_label = tk.Label(input_frame_livraison, text="N° de livraison :")
+        n_label.pack(side=tk.LEFT, padx=5)
+        n_entry = tk.Entry(input_frame_livraison)
+        n_entry.pack(side=tk.LEFT, padx=5)
+        
+        
+        name_label = tk.Label(input_frame_livraison, text="Nom :")
+        name_label.pack(side=tk.LEFT, padx=5)
+        name_entry = AutocompleteEntry(input_frame_livraison, textvariable=entry_var)
+        name_entry.set_completion_list(names_list)
+        name_entry.pack(side=tk.LEFT, padx=5)
+        
+
+        
+        order_label = tk.Label(input_frame_livraison, text="N° de commande :")
+        order_label.pack(side=tk.LEFT, padx=5)
+        order_entry = tk.Entry(input_frame_livraison)
+        order_entry.pack(side=tk.LEFT, padx=5)
+
+        prod_label = tk.Label(input_frame_livraison, text="ID Produit :")
+        prod_label.pack(side=tk.LEFT, padx=5)
+        prod_entry = tk.Entry(input_frame_livraison)
+        prod_entry.pack(side=tk.LEFT, padx=5)
+        
+        # Add the buttons for adding/modifying a client
+        button_frame_livraison = tk.Frame(frame)
+        button_frame_livraison.pack(pady=10)
+
+        display_liv = ctk.CTkButton(button_frame_livraison, text="Liste des livraisons", command=display_livraison)
+        display_liv.pack(side=tk.LEFT, padx=5)
+        
+        add_button_livraison = tk.Button(button_frame_livraison, text="Ajouter Livraison", command=lambda:page_livraison(1))
+        add_button_livraison.pack(side=tk.LEFT, padx=5)
+        
+        delete_button_livraison = tk.Button(button_frame_livraison, text="Supprimer Livraison", command= supress_livraison)
+        delete_button_livraison.pack(side=tk.LEFT, padx=5)
+        
+        modify_button_livraison = tk.Button(button_frame_livraison, text="Modifier Livraison",command= lambda: page_livraison(2))
+        modify_button_livraison.pack(side=tk.LEFT, padx=5)
+
+        modify_button_livraison = tk.Button(button_frame_livraison, text="Créer bon de Livraison", command=bon_livraison)
+        modify_button_livraison.pack(side=tk.LEFT, padx=5)
         
     def Clients():
         Clear_widgets(frame)
