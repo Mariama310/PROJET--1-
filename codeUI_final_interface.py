@@ -5,19 +5,17 @@ import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 import re
 import customtkinter as ctk 
-from datetime import date
+from datetime import date, datetime
 import csv
 import datetime
-from tkcalendar import DateEntry 
+from tkcalendar import DateEntry, Calendar
 import os
 
 #   pip install python-docx (for editing words)
 from docx import Document
-from docx.shared import Pt, RGBColor #text size, color
+from docx.shared import Pt, Inches, RGBColor #text size, color
 from docx.enum.text import WD_ALIGN_PARAGRAPH #paragraph alignment
-from docx.shared import Inches
 import comtypes.client
-from datetime import datetime
 
 ctk.deactivate_automatic_dpi_awareness()
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -239,15 +237,16 @@ class Product:
     stock=property(get_quantity_in_stock,set_quantity_in_stock)
     
 class Order:
-    def __init__(self, order_id, order_date, client, products, payment_type="", price=0, price_paid = 0, pompe=False):
+    def __init__(self, order_id, order_date, client, products, payment_type="", price=0, price_paid = 0, pompe=False, statut="Undefined"):
         self._order_id = order_id
         self._order_date = order_date
         self._client = client
-        self._products = products
-        self._price = price
+        self._products = products #list( (Product obj, qty), ... )
+        self._price=sum(product[0].prix*int(product[1]) for product in self._products)
         self._price_paid = price_paid
         self._payment_type=payment_type.capitalize()
         self._pompe=pompe
+        self._statut=statut
     
     def get_order_id(self):
         return self._order_id
@@ -297,12 +296,21 @@ class Order:
         self._pompe=pompe
     pompe=property(get_pompe, set_pompe)
     
+    def get_statut(self):
+        return self._statut
+    def set_statut(self, statut):
+        self._statut=statut
+    statut=property(get_statut, set_statut)
+    
+    def get_str_Products(self, id=False):
+        if id:
+            return " | ".join([f"{prod.id} : {qty}" for prod, qty in self._products])
+        else:
+            return " | ".join([f"{prod.description} : {qty}" for prod, qty in self._products])
+    
     def CreateBDC(self):
         titleSize = Pt(13)
         valueSize = Pt(12)
-        tickSize = Pt(14)
-        tickChar = '\u2714'
-        tickColor = '2ec92e' #code hex sans le #80ff80
             
         def AddTitleValue(paragraph, title, value="", length=0, alignment='left'):
             if alignment=='right':
@@ -333,24 +341,16 @@ class Order:
         AddTitleValue(p, '\t\t\t\t\t\tTEL : ', self.client.phone, 24)
         
         #products
-        AddTitleValue(document.add_paragraph(), "Produit :\t\t\tQuantité :")
+        AddTitleValue(document.add_paragraph(), "Produit :\t\t\t\tQuantité :\t\t\t\t\t\tPrix unité :")
         for product in self.products:
             p = document.add_paragraph()
             AddTitleValue(p, "", product[0].description, 60)
-            AddTitleValue(p, "\t\t\t", product[1])
+            AddTitleValue(p, "\t\t\t", product[1], 60)
+            AddTitleValue(p, "\t\t\t", product[0].prix)
         
-        # dosage tick option
+        # dosage
         p = document.add_paragraph()
-        AddTitleValue(p, 'Dosage :\t')
-        AddTitleValue(p, 'Pompé  ')
-        tick1, tick2 = (tickChar, ' ') if self.pompe else (' ', tickChar)
-        run = p.add_run(f"{tick1}\t")
-        run.font.size = tickSize
-        run.font.color.rgb = RGBColor.from_string(tickColor)
-        AddTitleValue(p, 'Non Pompé  ')
-        run = p.add_run(f"{tick2}")
-        run.font.size = tickSize
-        run.font.color.rgb = RGBColor.from_string(tickColor)
+        AddTitleValue(p, 'Dosage :\t', 'Pompé' if self.pompe else 'Non pompé')
         
         #payment method
         if self.payment_type=='Especes':
@@ -377,36 +377,7 @@ class Order:
         #signatures
         AddTitleValue(document.add_paragraph(), 'Signature du client :\t\t\t\t\t\t\t\t\tSignature du Chef de la Centrale : ', "")
         
-        document.save(f'Bon de Commande - {self.order_id} .docx')
-
-class Warehouse:
-    def __init__(self, capacity=None,quantity_in_stock=None,products_in_stock=None):
-        self._capacity = capacity
-        self._products_in_stock = products_in_stock
-        self._quantity_in_stock=quantity_in_stock
-
-    def get_capacity(self):
-        return self._capacity
-    
-    def set_capacity(self, capacity):
-        self._capacity = capacity
-    capacity=property(get_capacity,set_capacity)
-    
-    def get_products_in_stock(self):
-        return self._products_in_stock
-    
-    def add_product(self, product):
-        self._products_in_stock.append(product)
-    
-    def remove_product(self, product):
-        self._products_in_stock.remove(product)
-    products=property(get_products_in_stock,add_product,remove_product)
-
-    def get_quantity_in_stock(self):
-        return self._quantity_in_stock
-    def set_quantity_in_stock(self,q):
-        self._quantity_in_stock=q
-    quantity=property(get_quantity_in_stock,set_quantity_in_stock)
+        document.save(f'Bon de Commande - {self.order_id}.docx')
 
 class Warehouse:
     def __init__(self, capacity=None,quantity_in_stock=None,products_in_stock=None):
@@ -743,10 +714,13 @@ def getClientById(id):
             return client
     return None
 
-def getOrderById(id):
-    for order in order_instances:
+def getOrderById(id, index=False):
+    for i,order in enumerate(order_instances):
         if order.order_id==id:
-            return order
+            if index:
+                return i
+            else:
+                return order
     return None
 
 def getProductById(id):
@@ -755,12 +729,18 @@ def getProductById(id):
             return prod
     return None
 
+def getProductByDescription(description):
+    for prod in product_instances:
+        if prod.description==description:
+            return prod
+    return None
 
 
-###### TESTS 
+
+################## LOAD DATA ##################
 
 # For Personne class
-df1 = pd.read_csv("./test_class_personne.csv")
+df1 = pd.read_csv("./class_personne.csv")
 personne_instances = []
 for index, row in df1.iterrows():
     personne_id = row['personne_id']
@@ -773,7 +753,7 @@ for index, row in df1.iterrows():
     #print(personne.id, personne.name, personne.address, personne.phone)
 
 #For Supplier class
-df2=pd.read_csv("./test_class_supplier.csv")
+df2=pd.read_csv("./class_supplier.csv")
 supplier_instances = []
 for index, row in df2.iterrows():
     supplier_id = row['supplier_id']
@@ -786,7 +766,7 @@ for index, row in df2.iterrows():
     #print(supp.id,supp.name,supp.address,supp.phone)
 
 #For Employee class 
-df3=pd.read_csv("./test_class_employee.csv")
+df3=pd.read_csv("./class_employee.csv")
 employee_instances = []
 for index, row in df3.iterrows():
     employee_id = row['employee_id']
@@ -801,8 +781,7 @@ for index, row in df3.iterrows():
     #print(employee.id,employee.name,employee.address,employee.phone,employee.position,employee.salary)
 
 #For Client class
-
-df4=pd.read_csv("./test_class_client.csv")
+df4=pd.read_csv("./class_client.csv")
 client_instances = []
 for index, row in df4.iterrows():
     client_id = row['ID']
@@ -816,7 +795,7 @@ for index, row in df4.iterrows():
     #print(client.id,client.name,client.address,client.phone)
 
 #For product class
-df5=pd.read_csv("./test_class_product.csv")
+df5=pd.read_csv("./class_product.csv")
 product_instances = []
 
 for index, row in df5.iterrows():
@@ -826,28 +805,34 @@ for index, row in df5.iterrows():
     quantity_in_stock = row['quantity_in_stock']
     product = Product(product_id, description, price, quantity_in_stock)
     product_instances.append(product)
+tmp = [prod.description for prod in product_instances]
+assert len(tmp)==len(set(tmp))
+#2 produits ne peuvent avoir la même description
 
 #for product in product_instances:
     #print(product.id, product.description, product.prix, product.stock)
 
 #For Order class
-df6=pd.read_csv("./test_class_order.csv")
+df6=pd.read_csv("./class_order.csv")
 order_instances = []
 
+#csv columns : order_id, order_date, client, products, payment_type, price, price_paid, pompe, statut
 for index, row in df6.iterrows():
     order_id = row['order_id']
     order_date = row['order_date']
-    client = row['client_id']
-    products = row['product_ids']
-    order = Order(order_id, order_date, client, products)
+    client = getClientById(int(row['client_id']))
+    products = [(getProductById(int(id)), qty) for id, qty in (a.split(' : ') for a in row['products'].split(' | '))]
+    payment_type=row['payment_type']
+    price=int(row['price'])
+    price_paid=int(row['price_paid'])
+    pompe=True if row['pompe']=="True" else False
+    statut=row['statut']
+    order = Order(order_id, order_date, client, products, payment_type, price, price_paid, pompe, statut)
     order_instances.append(order)
 
-#for order in order_instances:
-    #print(order.id, order.date, order.client, order.product)
 
 #For Invoice class
-
-df7=pd.read_csv("./test_class_invoice.csv")
+df7=pd.read_csv("./class_invoice.csv")
 invoice_instances = []
 
 for index, row in df7.iterrows():
@@ -862,7 +847,7 @@ for index, row in df7.iterrows():
     #print(invoice.id,invoice.date , invoice.total_amount, invoice.products)
 
 #For Warehouse class
-df8=pd.read_csv("./test_class_warehouse.csv")
+df8=pd.read_csv("./class_warehouse.csv")
 warehouse=Warehouse(10000,0) #on a choisit pour le moment capacity=10000
 prd=0
 for index, row in df8.iterrows():
@@ -870,7 +855,7 @@ for index, row in df8.iterrows():
     prd+=quant
 
 #For Sale class
-df9 = pd.read_csv("./test_class_sales.csv")
+df9 = pd.read_csv("./class_sales.csv")
 #print(df9)
 sale_instances = []
 
@@ -891,7 +876,7 @@ for index, row in df9.iterrows():
 ##########################
 
 # Sample data (you can load data from CSV as well)
-clients_data = clients_data =pd.read_csv('./test_class_client.csv')
+clients_data = clients_data =pd.read_csv('./class_client.csv')
 clients_data = clients_data.to_dict(orient='records')
 
 # clients_data = [
@@ -902,17 +887,15 @@ clients_data = clients_data.to_dict(orient='records')
 #     {"ID": 5, "Name": "Eve", "Email": "eve@example.com", "Phone Number": "4321098765"}
 # ]
 
-clients_data = clients_data =pd.read_csv('./test_class_client.csv')
+clients_data = clients_data =pd.read_csv('./class_client.csv')
 clients_data = clients_data.to_dict(orient='records')
 
-products_data = pd.read_csv('./test_class_product.csv')
+products_data = pd.read_csv('./class_product.csv')
 products_data = products_data.to_dict(orient='records')
 
-sales_data = pd.read_csv('./test_class_sales.csv')
+sales_data = pd.read_csv('./class_sales.csv')
 sales_data = sales_data.to_dict(orient='records')
 
-orders_data = pd.read_csv('./test_class_order.csv')
-orders_data = orders_data.to_dict(orient='records')
 
 sales_data_displayed = sales_data
 
@@ -932,7 +915,7 @@ def add_livraison_csv(new_line, chemin):
         
    
 
-livraison_data = csv_list("./test_livraison.csv")
+livraison_data = csv_list("./livraison.csv")
 
 
 
@@ -968,18 +951,6 @@ def get_next_order_id():
     while new_id in existing_ids:
         new_id += 1
     return new_id
-
-def refresh_order_ids():
-    for index, order in enumerate(orders_data):
-        order["Order ID"] = index + 1
-
-def getOrderById(id):
-    for order in order_instances:
-        if order.order_id==id:
-            return order
-    messagebox.showerror("Erreur", "ID Commande Invalide")
-    return None
-        
 
 def is_numeric_input(input_str):
     """Check if the input string is numeric."""
@@ -1020,21 +991,17 @@ def is_valid_email(email):
 
 def generate_new_supplier_id():
     # Retrieve existing supplier IDs from the CSV file
-    csv_file_path = "./test_class_supplier.csv" # Replace with the actual path to your CSV file
+    csv_file_path = "./class_supplier.csv" # Replace with the actual path to your CSV file
     existing_ids = set()
 # Création de la fenêtre principale
 def create_main_window():
     window = tk.Tk()
     window.title("Gestion d'entreprise")
     window.geometry("800x600+0+0")
-      
     navbar = tk.Frame(window)
     navbar.pack()
-
     frame = tk.Frame(window)
     frame.pack()
-    
-
         
     def Products():     
         Clear_widgets(frame)
@@ -1074,13 +1041,13 @@ def create_main_window():
                 if is_numeric_input(produit_id):
                     new_id = get_next_order_id()
                     
-                    df = pd.read_csv("./test_class_product.csv")
+                    df = pd.read_csv("./class_product.csv")
                     size = df.shape[0] + 1
 
                     new_id = size
                     
                     df.loc[size] = [new_id, description, price, quantity_in_stock, historique]
-                    df.to_csv('./test_class_product.csv', index=False)
+                    df.to_csv('.class_product.csv', index=False)
                 
                     new_product = Product(new_id, description, price, quantity_in_stock, historique)
                     product_instances.append(new_product)
@@ -1098,9 +1065,9 @@ def create_main_window():
             selected_item = products_tree.selection()
             if selected_item:
                 item_id = products_tree.item(selected_item)["values"][0]
-                df = pd.read_csv('./test_class_product.csv', sep = ',')
+                df = pd.read_csv('./class_product.csv', sep = ',')
                 df = df[df['product_id'] != item_id]
-                df.to_csv('./test_class_product.csv', index=False)
+                df.to_csv('./class_product.csv', index=False)
 
                 for product in products_data:
                     if product["product_id"] == item_id:
@@ -1130,7 +1097,7 @@ def create_main_window():
                         if selected_produit_id == product_id:
                             products_tree.item(selected_item, values=(product_id, description, price, quantity, historique))
                             
-                            df = pd.read_csv("./test_class_product.csv")
+                            df = pd.read_csv("./class_product.csv")
                             colonne_index = 'product_id'
                             df = df.set_index(colonne_index)
                             
@@ -1138,7 +1105,7 @@ def create_main_window():
                             df.loc[product_id] = nouvelles_valeurs
                             df.reset_index(inplace = True)
                             
-                            df.to_csv("./test_class_product.csv", index = False)
+                            df.to_csv("./class_product.csv", index = False)
                             
                             messagebox.showinfo("Succès", "Commande modifiée avec succès.")
                         else:
@@ -1229,7 +1196,7 @@ def create_main_window():
             suppliers_tree.delete(*suppliers_tree.get_children())
 
             # Retrieve supplier data from the CSV file
-            csv_file_path = "./test_class_supplier.csv" 
+            csv_file_path = "./class_supplier.csv" 
 
             with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -1300,7 +1267,7 @@ def create_main_window():
                 new_supplier = Supplier(new_id, new_name, new_address, new_main_number, new_contact_person, new_email)
 
                 # Insert the new supplier data into the CSV file
-                csv_file_path = "./test_class_supplier.csv"
+                csv_file_path = "./class_supplier.csv"
 
                 with open(csv_file_path, mode='a', newline='', encoding='utf-8') as csv_file:
                     csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -1326,7 +1293,7 @@ def create_main_window():
             supplier_id_to_delete = int(supplier_id_entry_supplier.get())  # Assume the ID to delete is entered in the supplier ID field
 
             # Read the existing data from the CSV file
-            csv_file_path = "./test_class_supplier.csv"
+            csv_file_path = "./class_supplier.csv"
 
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -1370,7 +1337,7 @@ def create_main_window():
             id_to_modify = int(supplier_id_entry_supplier.get())
 
             # Read the existing data from the CSV file
-            csv_file_path = "./test_class_supplier.csv"
+            csv_file_path = "./class_supplier.csv"
 
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -1980,7 +1947,7 @@ def create_main_window():
             
             else:
                 if order_nbr:
-                    with open('test_class_order.csv', 'r', newline='') as file:
+                    with open('class_order.csv', 'r', newline='') as file:
                         reader = csv.reader(file, delimiter=',')
                         lines = list(reader)
                     for row in lines :
@@ -1993,7 +1960,7 @@ def create_main_window():
                     order_date_entry.set_date(original_date_str)
 
                 if client_name:
-                    with open('test_class_client.csv', 'r', newline='') as file:
+                    with open('class_client.csv', 'r', newline='') as file:
                         reader = csv.reader(file, delimiter=',')
                         lines = list(reader)
                     for row in lines :
@@ -2120,7 +2087,7 @@ def create_main_window():
             value = entry_var.get()
             print(f"Selected: {value}")
 
-        names_list=load_names_from_csv('test_class_client.csv')
+        names_list=load_names_from_csv('class_client.csv')
 
         # Add the labels and input fields for adding/modifying a client
         input_frame_livraison = tk.Frame(frame)
@@ -2175,7 +2142,7 @@ def create_main_window():
         def generate_new_client_id():
             # Retrieve existing supplier IDs from the CSV file
             deleted_clients_file_path = "./deleted_clients.csv"
-            client_file_path = "./test_class_client.csv"  # Replace with the actual path to your CSV file
+            client_file_path = "./class_client.csv"  # Replace with the actual path to your CSV file
             existing_ids = set()
             deleted_ids = set()
 
@@ -2231,7 +2198,7 @@ def create_main_window():
             selected_item = clients_tree.selection()
             if selected_item:
                 item_id = clients_tree.item(selected_item)["values"][0]
-                df = pd.read_csv('./test_class_client.csv', sep = ',')
+                df = pd.read_csv('./class_client.csv', sep = ',')
 
                 deleted_client = df[df['ID'] == item_id]
                 # add the deleted client to the deleted_clients csv file for archive
@@ -2240,7 +2207,7 @@ def create_main_window():
 
 
                 df = df[df['ID'] != item_id]
-                df.to_csv('./test_class_client.csv', index=False)
+                df.to_csv('./class_client.csv', index=False)
                 for client in clients_data:
                     if client["ID"] == item_id:
                         clients_data.remove(client)
@@ -2278,14 +2245,14 @@ def create_main_window():
 
             if name and email and phone_number:
                 if is_numeric_input(phone_number):
-                    df = pd.read_csv('./test_class_client.csv')
+                    df = pd.read_csv('./class_client.csv')
                     size = df.shape[0] + 1
 
                     client_id= generate_new_client_id()
                     new_client = Client(client_id, name, address, email, phone_number)
 
                     df.loc[size] = [client_id, name, address, email, phone_number]
-                    df.to_csv('./test_class_client.csv', index = False)
+                    df.to_csv('./class_client.csv', index = False)
            
            
                     client_instances.append(new_client)
@@ -2315,14 +2282,14 @@ def create_main_window():
                         selected_client_id = clients_tree.item(selected_item)["values"][0]
                         if selected_client_id == client_id:
                     
-                            df = pd.read_csv('./test_class_client.csv')
+                            df = pd.read_csv('./class_client.csv')
                             colonne_index = 'ID'
                             df = df.set_index(colonne_index)
                             nouvelles_valeurs = {'Name': name, 'Address': address, 'Email': email, 'Phone Number': phone_number}
                             df.loc[client_id] = nouvelles_valeurs
                             df.reset_index(inplace = True)
                     
-                            df.to_csv('./test_class_client.csv', index = False)
+                            df.to_csv('./class_client.csv', index = False)
                     
                             clients_tree.item(selected_item, values=(client_id, name, address, email, phone_number))
                             messagebox.showinfo("Succès", "Client modifié avec succès.")
@@ -2508,21 +2475,8 @@ def create_main_window():
         # unpaid_orders_button = tk.Button(button_frame_clients, text="Commandes impayées", command=get_unpaid_orders)
         # unpaid_orders_button.pack(side=tk.LEFT, padx=5)
 
-        
-
-        
-
-        
-
-        
-
-        
-
-
-
 
     #//////////////////////////// INTERFACE ORDER ///////////////////////////////////////////
-        
     def orders():    
         Clear_widgets(frame)
 
@@ -2537,22 +2491,22 @@ def create_main_window():
                     pompe = True if pompe_var.get() == 'Oui' else False
 
                     if order_date != "" and order_listprod_var.get()!="":
-                        products = [(getProductById(int(id)), qty) for id, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
+                        products = [(getProductByDescription(desc), qty) for desc, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
                         new_id = get_next_order_id()
-                        new_order = Order(new_id, order_date, client, products, type_transaction, pompe=pompe)
+                        new_order = Order(new_id, order_date, client, products, type_transaction, pompe=pompe, statut=statut)
                         order_instances.append(new_order)
-                        orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, " | ".join([f"{prod.id} : {qty}" for prod, qty in products]), type_transaction))
-                        order_date_label.config(text="")
+                        orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, new_order.get_str_Products(), type_transaction, 'Oui' if pompe else 'Non', new_order.price))
+        
+                        df = pd.read_csv('./class_order.csv')
+                        size = df.shape[0] + 1
+                        df.loc[size] = [new_id, order_date, client_id, new_order.get_str_Products(id=True), payment_type, order.price, order.price_paid, pompe, statut]
+                        df.to_csv('./class_order.csv', index=False)
+
+                        order_date_label.config(text="") #set defaults values
                         order_client_id_entry.delete(0, tk.END)
                         order_listprod_var.set("")
-                        
-                        type_transaction_var.set("CHEQUE")  # Set default value for Type de Transaction
+                        type_transaction_var.set("Chèque")  # Set default value for Type de Transaction
                         statut_var.set("PAYE")  # Set default value for Statut
-
-                        df = pd.read_csv("./test_class_order.csv")
-                        size = df.shape[0] + 1
-                        df.loc[size] = [new_id, order_date, client_id, products,type_transaction, statut]
-                        df.to_csv("./test_class_order.csv", index=False)
                     else:
                         messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
                 else:
@@ -2560,8 +2514,6 @@ def create_main_window():
                     messagebox.showerror("Client inexistant", "Le client n'existe pas. Veuillez le créer avant d'ajouter la commande.")
             else:
                 messagebox.showerror("Erreur", "L'identifiant de client doit être une valeur numérique.")
-
-
 
         def modify_order():
             selected_item = orders_tree.selection()
@@ -2571,26 +2523,36 @@ def create_main_window():
                 client_id = order_client_id_entry.get()
                 type_transaction = type_transaction_var.get()
                 statut = statut_var.get()
-
+                pompe = True if pompe_var.get() == 'Oui' else False
                 if order_id and order_date and client_id and order_listprod_var.get()!="" and type_transaction and statut:
                     if is_numeric_input(order_id) and is_numeric_input(client_id):
-                        order_id = int(order_id)
-                        products = [(getProductById(int(id)), qty) for id, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
+                        order_id, client_id = int(order_id), int(client_id)
+                        products = [(getProductByDescription(desc), qty) for desc, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
+                        index = getOrderById(order_id, index=True)
+                        client = getClientById(client_id)
                         selected_order_id = orders_tree.item(selected_item)["values"][0]
                         if selected_order_id == order_id:
-                            
-                            df = pd.read_csv('./test_class_order.csv')
-                            colonne_index = 'order_id'
-                            df = df.set_index(colonne_index)
-                            
-                            nouvelles_valeurs = {'order_date': order_date, 'client_id': client_id, 'product_ids' : products, 'statut' : statut}
-                            df.loc[order_id] = nouvelles_valeurs
-                            df.reset_index(inplace = True)
-                            
-                            df.to_csv('./test_class_order.csv', index = False)
-                            
-                            orders_tree.item(selected_item, values=(order_id, order_date, client_id, " | ".join([f"{prod.id} : {qty}" for prod, qty in products]), type_transaction, statut))
-                            messagebox.showinfo("Succès", "Commande modifiée avec succès.")
+                            if index!=None and client!=None:
+                                order = Order(order_id, order_date, client, products, type_transaction, pompe=pompe, statut=statut)
+                                order_instances[index] = order
+                                df = pd.read_csv('./class_order.csv')
+                                df.set_index('order_id', inplace=True)
+                                df.loc[order_id] = {'order_date': order_date, 'client_id': client_id, 'products' : order.get_str_Products(id=True),
+                                                'payment_type': type_transaction,'price': order.price,'price_paid': order.price_paid,'pompe': pompe,'statut': statut}
+                                df.reset_index(inplace = True)
+                                df.to_csv('./class_order.csv', index = False)
+
+                                orders_tree.item(selected_item, values=(order_id, order_date, client_id, order.get_str_Products(), type_transaction, 'Oui' if pompe else 'Non', statut, order.price))
+                                
+                                order_date_label.config(text="") #set defaults values
+                                order_client_id_entry.delete(0, tk.END)
+                                order_listprod_var.set("")
+                                type_transaction_var.set("Chèque")  # Set default value for Type de Transaction
+                                statut_var.set("PAYE")  # Set default value for Statut
+
+                                messagebox.showinfo("Succès", "Commande modifiée avec succès.")
+                            else:
+                                messagebox.showerror("Erreur", "ID de commande ou de client inexistant")
                         else:
                             messagebox.showerror("Erreur", "L'ID de la commande ne peut pas être modifié.")
                     else:
@@ -2599,26 +2561,22 @@ def create_main_window():
                     messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à modifier.")
-
-
+        
         def delete_order():
             selected_item = orders_tree.selection()
             if selected_item:
                 order_id = orders_tree.item(selected_item)["values"][0]
-                df = pd.read_csv('./test_class_order.csv', sep = ',')
-                df = df[df['order_id'] != order_id]
-                df.to_csv('./test_class_order.csv', index=False)
-                for order in orders_data:
-                    if order["order_id"] == order_id:
-                        orders_data.remove(order)
-                        break
+                order=getOrderById(order_id)
+                if order!=None:
+                    order_instances.remove(order)
+                    df = pd.read_csv('./class_order.csv', sep = ',')
+                    df = df[df['order_id'] != order_id]
+                    df.to_csv('./class_order.csv', index=False)
+                
                 orders_tree.delete(selected_item)
-                refresh_order_ids()
-            
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à supprimer.")
-
-
+        
         def double_click_order(event):
             selected_item = orders_tree.focus()
             if selected_item:
@@ -2649,32 +2607,46 @@ def create_main_window():
         def ProductList(event): #create a new window to headle the product/qty list
             def onclickProduct(event=None):
                 if order_add_qty_entry.get():
-                    s = order_listprod_var.get()+'\n' if order_listprod_var.get()!="" else ""
-                    s+=f"{order_add_product.get().split(')')[0][1:]} : {order_add_qty_entry.get()}"
-                    order_listprod_var.set(s)
+                    product, qty = order_add_product.get(), order_add_qty_entry.get()
+                    changed=False
+                    for i in range(len(listProd)):
+                        if listProd[i][0]==product:
+                            listProd[i] = (product, qty)
+                            changed=True
+                            break
+                    if changed:
+                        order_listprod_var.set("\n".join(" : ".join(e for e in tup) for tup in listProd))
+                    else:
+                        s = order_listprod_var.get()+'\n' if order_listprod_var.get()!="" else ""
+                        s+=f"{product} : {qty}"
+                        listProd.append((product, qty))
+                        order_listprod_var.set(s)
                     order_add_qty_entry.delete(0, tk.END)
                     order_add_qty_entry.focus_set()
-                
+            
+            def Suppr():
+                order_listprod_var.set("")
+                listProd=[]
+            
             newWindow = tk.Toplevel(frame)
-            newWindow.geometry('250x150+400+200')
+            newWindow.geometry('380x150+400+200')
             tk.Label(newWindow, text='ID Produit : Quantité (kg/m\u00B3)').grid(column=0, row=0) #^3 : U+00B3
             tk.Label(newWindow, textvariable=order_listprod_var, bg='white', bd=1, justify='left', anchor='w', relief='sunken').grid(column=0, row=1, columnspan=2, sticky='WE', pady=3)
-            order_add_product = tk.StringVar(newWindow, f"({product_instances[0].id}) {product_instances[0].description}")
-            ttk.Combobox(newWindow, textvariable= order_add_product, values=[f"({prod.id}) {prod.description}" for prod in product_instances], state="readonly").grid(column=0, row=2)
+            order_add_product = tk.StringVar(newWindow, product_instances[0].description)
+            ttk.Combobox(newWindow, textvariable= order_add_product, values=[prod.description for prod in product_instances], state="readonly").grid(column=0, row=2)
             order_add_qty_entry = tk.Entry(newWindow, width=14, validate='key', validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
             order_add_qty_entry.grid(column=1, row=2)
             order_add_qty_entry.bind('<Return>', onclickProduct)
-            tk.Button(newWindow, text="Clear list", command=lambda:order_listprod_var.set("")).grid(column=0, row=3)
+            tk.Button(newWindow, text="Supprimer", command=Suppr).grid(column=0, row=3)
             tk.Button(newWindow, text="Ajouter produit", command=onclickProduct).grid(column=1, row=3, pady=5)
-
+            listProd = [(desc,qty) for desc, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))] if order_listprod_var.get()!="" else []
 
         def display_orders():
-            if not orders_tree.get_children():
-                for order in orders_data:
-                    orders_tree.insert("", tk.END, values=(
-                        order["order_id"], order["order_date"], order["client_id"], order["product_ids"],
-                        order.get("type_transaction", ""), order.get("statut", "")
-                    ))
+            orders_tree.delete(*orders_tree.get_children())
+            for order in order_instances:
+                orders_tree.insert("", tk.END, values=(
+                    order.order_id, order.order_date, order.client.id, order.get_str_Products(),
+                    order.payment_type, 'Oui' if order.pompe else 'Non', order.statut, order.price))
         
         # historique par client
         def get_order_history():
@@ -2708,8 +2680,6 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
         
-
-
         def get_unpaid_orders():
             selected_item = orders_tree.selection()
             if selected_item:
@@ -2743,12 +2713,25 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
 
-
+        def buttonBDC():
+            orderid = order_id_entry.get()
+            if is_numeric_input(orderid):
+                try:
+                    order = getOrderById(int(orderid))
+                    try:
+                        order.CreateBDC()
+                    except:
+                        messagebox.showwarning("Avertissement", "Erreur création Bon de Commande")
+                except:
+                    messagebox.showwarning("Avertissement", "Client non existant")
+                
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
 
         titre_label = tk.Label(frame, text="Orders", font=("Arial", 16))
         titre_label.pack(pady=5)
 
-        columns = ("Order ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Statut")
+        columns = ("Order ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Pompe", "Status", "Montant")
         global orders_tree
         orders_tree = ttk.Treeview(frame, columns=columns, show="headings")
 
@@ -2792,8 +2775,8 @@ def create_main_window():
 
         tk.Label(transaction_frame, text="Type de Transaction:").pack(side=tk.LEFT, padx=5)
         type_transaction_var = tk.StringVar(frame)
-        type_transaction_var.set("CHEQUES")
-        type_transaction_select = ttk.Combobox(transaction_frame, textvariable=type_transaction_var, values=["CHEQUES", "ESPECES", "VIREMENT"], state="readonly")
+        type_transaction_var.set("Chèque")
+        type_transaction_select = ttk.Combobox(transaction_frame, textvariable=type_transaction_var, values=["Chèque", "Espèces", "Virement"], state="readonly")
         type_transaction_select.pack(side=tk.LEFT, padx=5)
 
         tk.Label(transaction_frame, text="Statut:").pack(side=tk.LEFT, padx=5)
@@ -2816,15 +2799,9 @@ def create_main_window():
         tk.Button(button_frame_orders, text="Ajouter Commande", command=add_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Supprimer Commande", command=delete_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Modifier Commande", command=modify_order).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame_orders, text="Créer un Bon de Commande", command=lambda: getOrderById(int(order_id_entry.get())).CreateBDC()).pack(side=tk.LEFT, padx=5)
-
-        get_order_history_button = tk.Button(button_frame_orders, text='Historique Commandes', command=get_order_history)
-        get_order_history_button.pack(side=tk.LEFT, padx=5)
-
-        unpaid_orders_button = tk.Button(button_frame_orders, text="Commandes impayées", command=get_unpaid_orders)
-        unpaid_orders_button.pack(side=tk.LEFT, padx=5)
-        
-
+        tk.Button(button_frame_orders, text="Créer un Bon de Commande", command=buttonBDC).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame_orders, text='Historique Commandes', command=get_order_history).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame_orders, text="Commandes impayées", command=get_unpaid_orders).pack(side=tk.LEFT, padx=5)
         #////////////////////////////  FIN INTERFACE ORDER ///////////////////////////////////////////
               
         
@@ -2866,7 +2843,7 @@ login_frame = ctk.CTkFrame(login_window)
 login_frame.pack(pady=(50, 20), padx=20)  # Add padx to space the frame from the window edge
 
 # Ajouter l'image
-image = Image.open("./téléchargement.png")
+image = Image.open("./icon.png")
 photo = ImageTk.PhotoImage(image)
 image_label = tk.Label(login_frame, image=photo, bg="#FF6F61")  # Rouge pas foncé
 image_label.grid(row=0, column=0, columnspan=2)
