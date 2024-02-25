@@ -242,7 +242,7 @@ class Order:
         self._order_date = order_date
         self._client = client
         self._products = products #list( (Product obj, qty), ... )
-        self._price=sum(product[0].prix*int(product[1]) for product in self._products)
+        self._price=round(sum(product[0].prix*int(product[1]) for product in self._products),2)
         self._price_paid = price_paid
         self._payment_type=payment_type.capitalize()
         self._pompe=pompe
@@ -376,8 +376,13 @@ class Order:
         
         #signatures
         AddTitleValue(document.add_paragraph(), 'Signature du client :\t\t\t\t\t\t\t\t\tSignature du Chef de la Centrale : ', "")
-        
-        document.save(f'Bon de Commande - {self.order_id}.docx')
+        try:
+            p = document.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            p.add_run().add_picture('signature.png')
+        except Exception as e:
+            print(e)
+        document.save(f'./Bon de Commandes/Bon de Commande - {self.order_id}.docx')
 
 class Warehouse:
     def __init__(self, capacity=None,quantity_in_stock=None,products_in_stock=None):
@@ -823,8 +828,8 @@ for index, row in df6.iterrows():
     client = getClientById(int(row['client_id']))
     products = [(getProductById(int(id)), qty) for id, qty in (a.split(' : ') for a in row['products'].split(' | '))]
     payment_type=row['payment_type']
-    price=int(row['price'])
-    price_paid=int(row['price_paid'])
+    price=float(row['price'])
+    price_paid=float(row['price_paid'])
     pompe=True if row['pompe']=="True" else False
     statut=row['statut']
     order = Order(order_id, order_date, client, products, payment_type, price, price_paid, pompe, statut)
@@ -942,7 +947,15 @@ def validate_id(action, index, value_if_allowed, prior_value, text, validation_t
         return True
     else:
         return False
-
+    
+def validate_float(action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name):
+    """Validate the entry field to allow numeric inputs and . to allow conversion to float"""
+    if text.isdigit() or text=="" or text ==".":
+        return True
+    elif text.replace(".","").isnumeric():
+        return True
+    else:
+        return False
 
 
 def get_next_order_id():
@@ -955,6 +968,12 @@ def get_next_order_id():
 def is_numeric_input(input_str):
     """Check if the input string is numeric."""
     return re.match(r'^\d+$', input_str) is not None
+
+def is_float(string):
+    if string.replace('.', '').isnumeric() and string.count('.')<2:
+        return True
+    else:
+        return False
 
 def validate_phone_number(action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name):
     """Validate the phone number field to allow only numeric input."""
@@ -993,11 +1012,33 @@ def generate_new_supplier_id():
     # Retrieve existing supplier IDs from the CSV file
     csv_file_path = "./class_supplier.csv" # Replace with the actual path to your CSV file
     existing_ids = set()
+
+def convert_docx_to_pdf(docx_filename, pdf_filename):
+    # Create a Word application object
+        
+    current_directory = os.getcwd()
+
+    # Create absolute paths from the relative paths
+    absolute_input_path = os.path.join(current_directory, docx_filename)
+    absolute_output_path = os.path.join(current_directory, pdf_filename)
+    # Create a Word application object
+    word = comtypes.client.CreateObject("Word.Application")
+    
+    # Open the Word document
+    doc = word.Documents.Open(absolute_input_path)
+    
+    # Save the document as PDF
+    doc.SaveAs(absolute_output_path, FileFormat=17)  # 17 represents the PDF format
+    
+    # Close the Word document and application
+    doc.Close()
+    word.Quit()    
+
 # Création de la fenêtre principale
 def create_main_window():
     window = tk.Tk()
     window.title("Gestion d'entreprise")
-    window.geometry("800x600+0+0")
+    window.geometry("1000x600+0+0")
     navbar = tk.Frame(window)
     navbar.pack()
     frame = tk.Frame(window)
@@ -1612,27 +1653,6 @@ def create_main_window():
 
             # Sauvegarder le document rempli
             doc.save(out)
-
-        def convert_docx_to_pdf(docx_filename, pdf_filename):
-            # Create a Word application object
-                
-            current_directory = os.getcwd()
-
-            # Create absolute paths from the relative paths
-            absolute_input_path = os.path.join(current_directory, docx_filename)
-            absolute_output_path = os.path.join(current_directory, pdf_filename)
-            # Create a Word application object
-            word = comtypes.client.CreateObject("Word.Application")
-            
-            # Open the Word document
-            doc = word.Documents.Open(absolute_input_path)
-            
-            # Save the document as PDF
-            doc.SaveAs(absolute_output_path, FileFormat=17)  # 17 represents the PDF format
-            
-            # Close the Word document and application
-            doc.Close()
-            word.Quit()
 
 
         def page_livraison(R):
@@ -2492,21 +2512,20 @@ def create_main_window():
 
                     if order_date != "" and order_listprod_var.get()!="":
                         products = [(getProductByDescription(desc), qty) for desc, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
+                        pricePaid = float(order_paid_entry.get()) if is_float(order_paid_entry.get()) else 0.0
                         new_id = get_next_order_id()
-                        new_order = Order(new_id, order_date, client, products, type_transaction, pompe=pompe, statut=statut)
+                        new_order = Order(new_id, order_date, client, products, type_transaction, pompe=pompe, statut=statut, price_paid=pricePaid)
+                        if new_order.price==new_order.price_paid:
+                            new_order.statut="Payée"
                         order_instances.append(new_order)
-                        orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, new_order.get_str_Products(), type_transaction, 'Oui' if pompe else 'Non', new_order.price))
+                        orders_tree.insert("", tk.END, values=(new_id, order_date, client.id, new_order.get_str_Products(), type_transaction, 'Oui' if pompe else 'Non', statut, new_order.price_paid, new_order.price))
         
                         df = pd.read_csv('./class_order.csv')
                         size = df.shape[0] + 1
                         df.loc[size] = [new_id, order_date, client_id, new_order.get_str_Products(id=True), payment_type, order.price, order.price_paid, pompe, statut]
                         df.to_csv('./class_order.csv', index=False)
 
-                        order_date_label.config(text="") #set defaults values
-                        order_client_id_entry.delete(0, tk.END)
-                        order_listprod_var.set("")
-                        type_transaction_var.set("Chèque")  # Set default value for Type de Transaction
-                        statut_var.set("PAYE")  # Set default value for Statut
+                        resetVar()
                     else:
                         messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
                 else:
@@ -2528,28 +2547,26 @@ def create_main_window():
                     if is_numeric_input(order_id) and is_numeric_input(client_id):
                         order_id, client_id = int(order_id), int(client_id)
                         products = [(getProductByDescription(desc), qty) for desc, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))]
+                        pricePaid = float(order_paid_entry.get()) if is_float(order_paid_entry.get()) else 0.0
                         index = getOrderById(order_id, index=True)
                         client = getClientById(client_id)
                         selected_order_id = orders_tree.item(selected_item)["values"][0]
                         if selected_order_id == order_id:
                             if index!=None and client!=None:
-                                order = Order(order_id, order_date, client, products, type_transaction, pompe=pompe, statut=statut)
+                                order = Order(order_id, order_date, client, products, type_transaction, pompe=pompe, statut=statut, price_paid=pricePaid)
+                                if order.price==order.price_paid:
+                                    order.statut="Payée"
                                 order_instances[index] = order
                                 df = pd.read_csv('./class_order.csv')
                                 df.set_index('order_id', inplace=True)
                                 df.loc[order_id] = {'order_date': order_date, 'client_id': client_id, 'products' : order.get_str_Products(id=True),
-                                                'payment_type': type_transaction,'price': order.price,'price_paid': order.price_paid,'pompe': pompe,'statut': statut}
+                                                'payment_type': type_transaction,'price': order.price,'price_paid': order.price_paid,'pompe': pompe,'statut': order.statut}
                                 df.reset_index(inplace = True)
                                 df.to_csv('./class_order.csv', index = False)
 
-                                orders_tree.item(selected_item, values=(order_id, order_date, client_id, order.get_str_Products(), type_transaction, 'Oui' if pompe else 'Non', statut, order.price))
+                                orders_tree.item(selected_item, values=(order_id, order_date, client_id, order.get_str_Products(), type_transaction, 'Oui' if pompe else 'Non', order.statut, order.price_paid, order.price))
                                 
-                                order_date_label.config(text="") #set defaults values
-                                order_client_id_entry.delete(0, tk.END)
-                                order_listprod_var.set("")
-                                type_transaction_var.set("Chèque")  # Set default value for Type de Transaction
-                                statut_var.set("PAYE")  # Set default value for Statut
-
+                                resetVar()
                                 messagebox.showinfo("Succès", "Commande modifiée avec succès.")
                             else:
                                 messagebox.showerror("Erreur", "ID de commande ou de client inexistant")
@@ -2572,7 +2589,6 @@ def create_main_window():
                     df = pd.read_csv('./class_order.csv', sep = ',')
                     df = df[df['order_id'] != order_id]
                     df.to_csv('./class_order.csv', index=False)
-                
                 orders_tree.delete(selected_item)
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à supprimer.")
@@ -2588,6 +2604,21 @@ def create_main_window():
                     order_date_label.config(text=values[1])
                     order_client_id_entry.insert(tk.END, values[2])
                     order_listprod_var.set("\n".join(values[3].split(" | ")))
+                    type_transaction_var.set(values[4])
+                    pompe_var.set(values[5])
+                    statut_var.set(values[6])
+                    order_paid_entry.delete(0, tk.END)
+                    order_paid_entry.insert(0, values[7])
+        
+        def resetVar():
+            order_id_entry.delete(0, tk.END)
+            order_date_label.config(text="")
+            order_client_id_entry.delete(0, tk.END)
+            order_listprod_var.set("")
+            type_transaction_var.set("Chèque")
+            pompe_var.set("Oui")
+            statut_var.set("Non Payée")
+            order_paid_entry.delete(0, tk.END)
         
         def GetDate(event): #create a new window with a calendar
             newWindow = tk.Toplevel(frame)
@@ -2646,73 +2677,50 @@ def create_main_window():
             for order in order_instances:
                 orders_tree.insert("", tk.END, values=(
                     order.order_id, order.order_date, order.client.id, order.get_str_Products(),
-                    order.payment_type, 'Oui' if order.pompe else 'Non', order.statut, order.price))
+                    order.payment_type, 'Oui' if order.pompe else 'Non', order.statut, order.price_paid, order.price))
         
         # historique par client
         def get_order_history():
-            selected_item = orders_tree.selection()
-            if selected_item:
-                client_id = order_client_id_entry.get()
-                # name = client_name_entry.get()
-                # email = email_entry.get()
-                # phone_number = phone_entry.get()
-
-                if client_id : # and name and email and phone_number:
-                    if is_numeric_input(client_id) : # and is_numeric_input(phone_number):
-                        client_id = int(client_id)
-                        selected_client_id = orders_tree.item(selected_item)["values"][2]
-                        if selected_client_id == client_id:
-                    
-                            client_orders = [order for order in orders_data if order["client_id"] == client_id]
-                    
-                            for order in client_orders:
-                                orders_tree.insert("", tk.END, values=(
-                                    order["Order ID"], order["Date de la commande"], order["Client ID"], order["Produits"],
-                                    order.get("Type de Transaction", ""), order.get("Statut", "")
-                                ))
-                    
-                        else:
-                            messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
-                    else:
-                        messagebox.showerror("Erreur", "L'ID doit être une valeur numérique.")
+            client_id = int(order_client_id_entry.get()) if order_client_id_entry.get().isnumeric() else None
+            if client_id:
+                client_orders = [order for order in order_instances if order.client.clt_id == client_id]
+                if len(client_orders)!=0:
+                    orders_tree.delete(*orders_tree.get_children())
+                    for order in client_orders:
+                        orders_tree.insert("", tk.END, values=(
+                            order.order_id, order.order_date, order.client.clt_id, order.get_str_Products(),
+                            order.payment_type, 'Oui' if order.pompe else 'Non', order.statut, order.price_paid, order.price))
                 else:
-                    messagebox.showerror("Erreur", "Veuillez sélectionner un id client !")
+                    messagebox.showinfo("Information", f"Aucune commande pour ID : {client_id}")
+                order_client_id_entry.delete(0, tk.END)
             else:
-                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
-        
+                messagebox.showerror("Erreur", "ID client incorrect")
+
         def get_unpaid_orders():
-            selected_item = orders_tree.selection()
-            if selected_item:
-                client_id = order_client_id_entry.get()
-                # name = client_name_entry.get()
-                # email = email_entry.get()
-                # phone_number = phone_entry.get()
-        
-                if client_id : # and name and email and phone_number :
-                    if is_numeric_input(client_id) : # and is_numeric_input(phone_number):
-                        client_id = int(client_id)
-                        selected_client_id = orders_tree.item(selected_item)["values"][2]
-                
-                        if selected_client_id == client_id :
-                            client_orders = [order for order in orders_data if order["client_id"] == client_id]
-                            unpaid_orders = [order for order in client_orders if order["statut"] == "Non PAYE"]
-                    
-                            for order in unpaid_orders:
-                                orders_tree.insert("", tk.END, values=(
-                                    order["Order ID"], order["Date de la commande"], order["Client ID"], order["Produits"],
-                                    order.get("Type de Transaction", ""), order.get("Statut", "")))
-                    
-                            if len(unpaid_orders) == 0:
-                                messagebox.showinfo("Information", "Ce client n'a pas de commandes impayées.")
-                        else:
-                            messagebox.showerror("Erreur", "L'ID du client ne peut pas être modifié.")
-                    else:
-                        messagebox.showerror("Erreur", "L'ID doit être une valeur numérique.")
+            show=True
+            client_id = int(order_client_id_entry.get()) if order_client_id_entry.get().isnumeric() else None
+            if client_id: #unpaid orders by client_id
+                if any(c.clt_id==client_id for c in client_instances):
+                    unpaid_orders = [order for order in order_instances if order.client.clt_id==client_id and order.statut=="Non payée"]
                 else:
-                    messagebox.showerror("Erreur", "Veuillez sélectionner un id client !")
-            else:
-                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
-
+                    messagebox.showerror("Erreur", 'ID client incorrect')
+                    show=False
+                order_client_id_entry.delete(0, tk.END)
+            else: #all unpaid orders
+                unpaid_orders = [order for order in order_instances if order.statut=="Non Payée"]
+            if show:
+                if len(unpaid_orders)!=0:
+                    orders_tree.delete(*orders_tree.get_children())
+                    for order in unpaid_orders:
+                        orders_tree.insert("", tk.END, values=(
+                            order.order_id, order.order_date, order.client.clt_id, order.get_str_Products(),
+                            order.payment_type, 'Oui' if order.pompe else 'Non', order.statut, order.price_paid, order.price))
+                        
+                elif client_id:
+                    messagebox.showinfo("Information", "Ce client n'a pas de commandes impayées")
+                else:
+                    messagebox.showinfo("Information", "Aucune commande impayée")
+                
         def buttonBDC():
             orderid = order_id_entry.get()
             if is_numeric_input(orderid):
@@ -2720,26 +2728,39 @@ def create_main_window():
                     order = getOrderById(int(orderid))
                     try:
                         order.CreateBDC()
+                        try:
+                            convert_docx_to_pdf(f'./Bon de Commandes/Bon de Commande - {order.order_id}.docx', f'./Bon de Commandes/Bon de Commande - {order.order_id}.pdf')
+                            os.remove(f'./Bon de Commandes/Bon de Commande - {order.order_id}.docx')
+                        except:
+                            messagebox.showerror("Erreur", "Erreur conversion word en pdf")
                     except:
-                        messagebox.showwarning("Avertissement", "Erreur création Bon de Commande")
+                        messagebox.showerror("Erreur", "Erreur création Bon de Commande")
                 except:
-                    messagebox.showwarning("Avertissement", "Client non existant")
+                    messagebox.showerror("Erreur", "ID commande incorrect")
                 
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
 
         titre_label = tk.Label(frame, text="Orders", font=("Arial", 16))
         titre_label.pack(pady=5)
-
-        columns = ("Order ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Pompe", "Status", "Montant")
+        tree_frame = tk.Frame(frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        columns = ("commande ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Pompé", "Status", "Montant payé", "Montant")
+        order_col_size = [90, 130, 60, 220, 120, 80, 80, 100, 100]
+        
+        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical")
+        scrollbar.pack(side='right', fill='y')
+        
         global orders_tree
-        orders_tree = ttk.Treeview(frame, columns=columns, show="headings")
-
-        for col in columns:
+        orders_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", yscrollcommand=scrollbar.set)
+        scrollbar.config(command=orders_tree.yview)
+        
+        for i,col in enumerate(columns):
             orders_tree.heading(col, text=col)
-            orders_tree.column(col, width=150)
+            orders_tree.column(col, width=order_col_size[i])
 
-        orders_tree.pack(fill=tk.BOTH, expand=True, pady=10)
+        orders_tree.pack(side=tk.LEFT, pady=10)
         orders_tree.bind("<Double-1>", double_click_order)
         
         
@@ -2781,21 +2802,29 @@ def create_main_window():
 
         tk.Label(transaction_frame, text="Statut:").pack(side=tk.LEFT, padx=5)
         statut_var = tk.StringVar(frame)
-        statut_var.set("PAYE")
-        statut_select = ttk.Combobox(transaction_frame, textvariable=statut_var, values=["PAYE", "Non PAYE", "AVANCE"], state="readonly")
+        statut_var.set("Non Payée")
+        statut_select = ttk.Combobox(transaction_frame, textvariable=statut_var, values=["Payée", "Non Payée", "Avance"], state="readonly")
         statut_select.pack(side=tk.LEFT, padx=5)
 
         tk.Label(transaction_frame, text="Pompé :").pack(side=tk.LEFT, padx=5)
         pompe_var = tk.StringVar(frame)
         pompe_var.set("Oui")
         ttk.Combobox(transaction_frame, textvariable=pompe_var, values=["Oui", "Non"], state="readonly").pack(side=tk.LEFT, padx=5)
+        
+        tk.Label(transaction_frame, text="Montant payé :").pack(side=tk.LEFT, padx=5)
+        order_paid_entry = tk.Entry(transaction_frame, validate="key")
+        order_paid_entry.config(validatecommand=(frame.register(validate_float), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        order_paid_entry.pack(side=tk.LEFT, padx=5)
+        
                         
         # Add the buttons for adding/modifying an order
         button_frame_orders = tk.Frame(frame)
         button_frame_orders.pack(pady=10)
         
+        display_orders()
+        
         #buttons
-        ctk.CTkButton(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Ajouter Commande", command=add_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Supprimer Commande", command=delete_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Modifier Commande", command=modify_order).pack(side=tk.LEFT, padx=5)
