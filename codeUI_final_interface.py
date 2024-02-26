@@ -969,6 +969,10 @@ def is_numeric_input(input_str):
     """Check if the input string is numeric."""
     return re.match(r'^\d+$', input_str) is not None
 
+def is_price_input(input_str):
+    """Check if the input string is numeric."""
+    return re.match(r'^\d+\.\d{2}$', input_str) is not None
+
 def is_float(string):
     if string.replace('.', '').isnumeric() and string.count('.')<2:
         return True
@@ -1132,7 +1136,7 @@ def create_main_window():
                 historique = historique_entry.get()
 
                 if product_id and description and price and quantity and historique :
-                    if is_numeric_input(product_id) and is_numeric_input(price) and is_numeric_input(quantity):
+                    if is_numeric_input(product_id) and is_price_input(price) and is_numeric_input(quantity):
                         product_id = int(product_id)
                         selected_produit_id = products_tree.item(selected_item)["values"][0]
                         if selected_produit_id == product_id:
@@ -1518,6 +1522,258 @@ def create_main_window():
     def Sales():
         Clear_widgets(frame)
         tk.Label(frame,text="Sales").pack()
+        
+        def add_sale():
+            #sale_id = sale_id_entry.get()
+            date = sale_date_entry.get()
+            prod_id = product_id_entry.get()
+            quant = quantity_sold_entry.get()
+            price = sale_price_entry.get()
+            client_id = client_id_entry.get()
+            #print(type(price))
+            
+            if (#sale_id and 
+            date and prod_id and quant and price and client_id):
+                if (#is_numeric_input(sale_id) and 
+                    is_numeric_input(prod_id) and is_numeric_input(quant) 
+                and is_price_input(price) and is_numeric_input(client_id)):
+                    
+                    df = pd.read_csv('./class_sales.csv')
+                    df2 = pd.read_csv('./deleted_sales.csv')
+                    size = df.shape[0] + df2.shape[0] + 1
+
+                    print(df.shape[0],df2.shape[0],size)
+                    new_id = size
+
+                    print(size)
+
+                    df.loc[size] = [new_id, date, prod_id, quant, price, client_id]
+                    df.to_csv('./class_sales.csv', index=False)
+
+                    new_sale = {
+                        "Sale ID": new_id, #/!\ nouvel attribut 
+                        "Sale Date": date,
+                        "Product ID": prod_id,
+                        "Quantity Sold": quant,
+                        "Sale Price": price,
+                        "Client ID": client_id
+                    }
+
+                    sales_data.append(new_sale)
+                    #sales_data_displayed.append(new_sale)
+
+                    sales_tree.insert("", tk.END, values=(
+                        new_sale["Sale ID"], new_sale["Sale Date"], 
+                        new_sale["Product ID"], new_sale["Quantity Sold"],
+                        new_sale["Sale Price"],new_sale["Client ID"]
+                    ))
+                    
+                    sale_id_entry.delete(0, tk.END)
+                    sale_date_entry.delete(0, tk.END)
+                    product_id_entry.delete(0, tk.END)
+                    quantity_sold_entry.delete(0, tk.END)
+                    sale_price_entry.delete(0, tk.END)
+                    client_id_entry.delete(0, tk.END)
+                    #type_transaction_var.set("CHEQUES")  # Set default value for Type de Transaction
+                    #statut_var.set("PAYE")  # Set default value for Statut
+                else:
+                    message=""
+                    #if not is_numeric_input(sale_id) : message+="id de la vente;"
+                    if not is_numeric_input(prod_id) : message+="id du produit;"
+                    if not is_numeric_input(quant) : message+="quantité vendue;"
+                    if not is_price_input(price) : 
+                        message+="prix de vente;"
+                        print(type(price))
+                    if not is_numeric_input(client_id) : message+="id du client;"            
+                    messagebox.showerror("Erreur", 
+                                        f"L'id de la vente/l'id du produit/la quantité vendue/le prix de vente/l'identifiant de client\ndoivent être des valeurs numériques.\nErreur sur : {message}")
+            else:
+                messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+
+        def delete_sale():
+            selected_item = sales_tree.selection()
+            if selected_item:
+                sale_id = sales_tree.item(selected_item)["values"][0]
+        
+                df = pd.read_csv('./class_sales.csv', sep = ',')
+                deleted_sale = df[df['Sale ID'] == sale_id]
+                
+                # add the deleted client to the deleted_clients csv file for archive
+                with open('./deleted_sales.csv', 'a', newline='') as f:
+                    deleted_sale.to_csv(f, header=f.tell()==0, index=False)
+                    
+                df = df[df['Sale ID'] != sale_id]
+                df.to_csv('./class_sales.csv', index=False)
+            
+                #for sale in sales_data_displayed
+                for sale in sales_data:
+                    if sale["Sale ID"] == sale_id:
+                        sales_data.remove(sale)
+                        #sales_data_displayed.remove(sale)             # on ne devrait pas supprimer des données
+                        break
+                sales_tree.delete(selected_item)
+                #refresh_sale_ids()                         #A VOIR SI A IMPLEMENTER
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner une vente à supprimer.")
+
+        def display_sales():
+            if not sales_tree.get_children():
+                #for sale in sales_data_displayed:
+                for sale in sales_data:
+                    #print(sale)
+                    sales_tree.insert("", tk.END, values=(
+                        sale["Sale ID"],sale["Sale Date"], sale["Product ID"], sale["Quantity Sold"], sale["Sale Price"],sale["Client ID"]
+                    ))
+
+        def modify_sale():
+            selected_item = sales_tree.selection()
+            if selected_item:
+                sale_id = sale_id_entry.get()
+                sale_date = sale_date_entry.get()
+                product_id = product_id_entry.get()
+                quantity_sold = quantity_sold_entry.get()
+                sale_price = sale_price_entry.get()
+                client_id = client_id_entry.get()
+
+                if sale_id and sale_date and product_id and quantity_sold and sale_price and client_id:
+                    if is_numeric_input(sale_id) and is_numeric_input(product_id) and is_price_input(sale_price) and is_numeric_input(client_id):
+                        sale_id=int(sale_id)
+                        selected_sale_id = sales_tree.item(selected_item)["values"][0]
+                        selected_product_id = sales_tree.item(selected_item)["values"][2]
+                        selected_client_id = sales_tree.item(selected_item)["values"][5]
+
+                        #if selected_sale_id == sale_id:
+                        
+
+                        print(type(selected_sale_id),type(sale_id), type(selected_client_id),type(client_id))
+                        if selected_sale_id == int(sale_id) and selected_product_id == int(product_id) and selected_client_id == int(client_id):
+                            df = pd.read_csv('./class_sales.csv')
+                            colonne_index = 'Sale ID'
+                            df = df.set_index(colonne_index)
+                                
+                            nouvelles_valeurs = {'Sale ID': sale_id, 'Sale Date': sale_date, 'Product ID' : product_id, 'Quantity Sold' : quantity_sold, 'Sale Price' : sale_price, 'Client ID' : client_id}
+                            df.loc[sale_id] = nouvelles_valeurs #product_id
+                            df.reset_index(inplace = True)
+                                
+                            df.to_csv('./class_sales.csv', index = False)
+
+                            sales_tree.item(selected_item, values=(sale_id, sale_date, product_id, quantity_sold,sale_price,client_id))
+                            messagebox.showinfo("Succès", "Vente modifiée avec succès.")
+                        else:
+                            messagebox.showerror("Erreur", "L'id de la vente et/ou l'id du client ne peut/peuvent pas être modifié.s.")
+                            #mais effectue un ajout au final
+                    else:
+                        messagebox.showerror("Erreur", "l'id de vente/l'id de produit/la quantité vendue/l'id du client doivent être des valeurs numériques.")
+                else:
+                    messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner une vente à modifier.")            
+
+        def double_click_sale(event):
+            selected_item = sales_tree.focus()
+            if selected_item:
+                values = sales_tree.item(selected_item, "values")
+                if values:
+                    #print(values)
+                    sale_id_entry.delete(0, tk.END)
+                    sale_date_entry.delete(0, tk.END)
+                    product_id_entry.delete(0, tk.END)
+                    quantity_sold_entry.delete(0, tk.END)
+                    sale_price_entry.delete(0, tk.END)
+                    client_id_entry.delete(0, tk.END)
+                    
+                    sale_id_entry.insert(tk.END, values[0])
+                    sale_date_entry.insert(tk.END, values[1])
+                    product_id_entry.insert(tk.END, values[2])
+                    quantity_sold_entry.insert(tk.END, values[3])
+                    sale_price_entry.insert(tk.END, values[4])
+                    client_id_entry.insert(tk.END, values[5])
+
+    # Create the table to display sales data                
+        titre_label = tk.Label(frame, text="Ventes", font=("Arial", 16))
+        titre_label.pack(pady=5)
+        
+        columns_sales = ("Sale ID","Sale Date","Product ID","Quantity Sold","Sale Price","Client ID")
+        
+        tree_frame = tk.Frame(frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical")
+        scrollbar.pack(side='right', fill='y')
+
+        style = ttk.Style()
+        style.configure('Treeview', rowheight=25)
+        
+        sales_tree = ttk.Treeview(tree_frame, columns=columns_sales, show="headings", style='Custom.Treeview')
+
+        scrollbar.config(command=sales_tree.yview)
+
+        for col in columns_sales:
+            sales_tree.heading(col, text=col)
+            sales_tree.column(col, width=5)
+
+        sales_tree.pack(fill=tk.BOTH, expand=True, pady=5)
+        sales_tree.bind("<Double-1>", double_click_sale)
+        
+    # Add the labels and input fields for adding/modifying a sale
+        input_frame_sales = tk.Frame(frame)
+        input_frame_sales.pack()
+
+        sale_id_label = tk.Label(input_frame_sales, text="ID de la vente :")
+        sale_id_label.pack(side=tk.LEFT, padx=5)
+        sale_id_entry = tk.Entry(input_frame_sales, validate="key")
+        sale_id_entry.pack(side=tk.LEFT, padx=5)
+
+        sale_date_label = tk.Label(input_frame_sales, text="Date de vente:")
+        sale_date_label.pack(side=tk.LEFT, padx=5)
+        sale_date_entry = tk.Entry(input_frame_sales, validate="key")
+        """checker si la sale_date est valide"""
+        #sale_date_entry.config(valsale_dateatecommand=(root.register(valisale_date_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        sale_date_entry.pack(side=tk.LEFT, padx=5)
+
+        product_id_label = tk.Label(input_frame_sales, text="ID du Produit :")
+        product_id_label.pack(side=tk.LEFT, padx=5)
+        product_id_entry = tk.Entry(input_frame_sales, validate="key")
+        product_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        product_id_entry.pack(side=tk.LEFT, padx=5)
+
+        quantity_sold_label = tk.Label(input_frame_sales, text="Quantité vendue :")
+        quantity_sold_label.pack(side=tk.LEFT, padx=5)
+        quantity_sold_entry = tk.Entry(input_frame_sales, validate="key")
+        "checker si la quantité est valide : 1. en tant qu'int positif;"               #check
+        "2. en considérant le stock"
+        quantity_sold_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        quantity_sold_entry.pack(side=tk.LEFT, padx=5)
+
+        sale_price_label = tk.Label(input_frame_sales, text="Prix de vente:")
+        sale_price_label.pack(side=tk.LEFT, padx=5)
+        sale_price_entry = tk.Entry(input_frame_sales, validate="key")
+        """checker si le prix est valide: 1. en tant que float"""
+        sale_price_entry.config(validatecommand=(frame.register(is_price_input), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        sale_price_entry.pack(side=tk.LEFT, padx=5)
+
+        client_id_label = tk.Label(input_frame_sales, text="ID du client:")
+        client_id_label.pack(side=tk.LEFT, padx=5)
+        client_id_entry = tk.Entry(input_frame_sales, validate="key")
+        client_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+        """checker si le client existe bel et bien dans la database"""
+        client_id_entry.pack(side=tk.LEFT, padx=5)
+
+    # Add the buttons for adding/modifying a sale
+        button_frame_sales = tk.Frame(frame)
+        button_frame_sales.pack(pady=5)
+
+        display_sales = ctk.CTkButton(button_frame_sales, text="Liste des ventes", command=display_sales)
+        display_sales.pack(side=tk.LEFT, padx=5)
+
+        add_button_sales = tk.Button(button_frame_sales, text="Ajouter Vente", command=add_sale)
+        add_button_sales.pack(side=tk.LEFT, padx=5)
+
+        delete_button_sales = tk.Button(button_frame_sales, text="Supprimer Vente", command=delete_sale)
+        delete_button_sales.pack(side=tk.LEFT, padx=5)
+
+        modify_button_sales = tk.Button(button_frame_sales, text="Modifier Vente", command=modify_sale)
+        modify_button_sales.pack(side=tk.LEFT, padx=5)
         
     def Deliveries():
         Clear_widgets(frame)
