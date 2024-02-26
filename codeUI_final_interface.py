@@ -127,8 +127,9 @@ class Client(Personne):
 
     def get_email(self):
         return self._email
-    def set_email(self, address):
-        self._address = address
+    def set_email(self, email):
+        self._email = email
+    email=property(get_email,set_email)
 
 class Database:
     def __init__(self):
@@ -335,18 +336,41 @@ class Order:
         
         #nom client
         p = document.add_paragraph()
-        AddTitleValue(p, 'CLIENT : ', self.client.name, 27)
+        AddTitleValue(p, 'Client : ', self.client.name, 27)
         
         #tel client
-        AddTitleValue(p, '\t\t\t\t\t\tTEL : ', self.client.phone, 24)
+        AddTitleValue(p, '\t\t\tTél : ', self.client.phone, 24)
+        
+        #email client
+        AddTitleValue(p, '\t\t\tEmail : ', self.client.email, 24)
         
         #products
-        AddTitleValue(document.add_paragraph(), "Produit :\t\t\t\tQuantité :\t\t\t\t\t\tPrix unité :")
+        table = document.add_table(rows=1, cols=3)
+        """
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Produit'
+        hdr_cells[1].text = 'Quantité'
+        hdr_cells[2].text = "Prix à l'unité"
+        
         for product in self.products:
-            p = document.add_paragraph()
-            AddTitleValue(p, "", product[0].description, 60)
-            AddTitleValue(p, "\t\t\t", product[1], 60)
-            AddTitleValue(p, "\t\t\t", product[0].prix)
+            row_cells = table.add_row().cells
+            row_cells[0].text = product[0].description
+            row_cells[1].text = str(product[1])
+            row_cells[2].text = str(product[0].prix)
+        """
+        hdr_cells = table.rows[0].cells
+        for cell, text in zip(hdr_cells, ['Produits', 'Quantité', "Prix à l'unité"]):
+            cell.text = text
+            # Set font properties (bold and size)
+            cell.paragraphs[0].runs[0].font.bold = True
+            cell.paragraphs[0].runs[0].font.size = titleSize  # Adjust size as needed
+
+        # Populate the table with data from the list of products and set font size
+        for product in self.products:
+            row_cells = table.add_row().cells
+            for cell, data in zip(row_cells, [product[0].description, str(product[1]), str(product[0].prix)]):
+                cell.text = str(data)
+                cell.paragraphs[0].runs[0].font.size = valueSize
         
         # dosage
         p = document.add_paragraph()
@@ -377,6 +401,8 @@ class Order:
         #signatures
         AddTitleValue(document.add_paragraph(), 'Signature du client :\t\t\t\t\t\t\t\t\tSignature du Chef de la Centrale : ', "")
         try:
+            if not os.path.isdir('./Bon de Commandes'):
+                os.mkdir('./Bon de Commandes')
             p = document.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
             p.add_run().add_picture('signature.png')
@@ -794,7 +820,7 @@ for index, row in df4.iterrows():
     address = row['Address']
     email_client = row['Email']
     phone_number = row['Phone Number']
-    client = Client(client_id, name, address, email_client, phone_number)
+    client = Client(client_id, name, address, phone_number, email_client)
     client_instances.append(client)
 #for client in client_instances:
     #print(client.id,client.name,client.address,client.phone)
@@ -2957,7 +2983,7 @@ def create_main_window():
             client_id = int(order_client_id_entry.get()) if order_client_id_entry.get().isnumeric() else None
             if client_id: #unpaid orders by client_id
                 if any(c.clt_id==client_id for c in client_instances):
-                    unpaid_orders = [order for order in order_instances if order.client.clt_id==client_id and order.statut=="Non payée"]
+                    unpaid_orders = [order for order in order_instances if order.client.clt_id==client_id and order.statut=="Non Payée"]
                 else:
                     messagebox.showerror("Erreur", 'ID client incorrect')
                     show=False
