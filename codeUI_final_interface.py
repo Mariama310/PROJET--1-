@@ -2257,9 +2257,11 @@ def create_main_window():
                             mod_line=row
                     original_date_str = mod_line[1].replace('/', '-')
                     
-                    
+                    parts = original_date_str.split("-")
 
-                    order_date_entry.set_date(original_date_str)
+                    formatted_date = parts[2] + "-" + parts[1] + "-" + parts[0]
+
+                    order_date_entry.set_date(formatted_date)
 
                 if client_name:
                     with open('class_client.csv', 'r', newline='') as file:
