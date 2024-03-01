@@ -3108,7 +3108,7 @@ def create_main_window():
         display_orders()
         
         #buttons
-        tk.Button(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=5)
+        ctk.CTkButton(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Ajouter Commande", command=add_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Supprimer Commande", command=delete_order).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame_orders, text="Modifier Commande", command=modify_order).pack(side=tk.LEFT, padx=5)
