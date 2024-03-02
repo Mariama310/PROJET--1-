@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 import re
 import customtkinter as ctk 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import csv
 import datetime
 from tkcalendar import DateEntry, Calendar
@@ -921,6 +921,9 @@ clients_data = clients_data.to_dict(orient='records')
 clients_data = clients_data =pd.read_csv('./class_client.csv')
 clients_data = clients_data.to_dict(orient='records')
 
+deleted_clients_data = pd.read_csv('./deleted_clients.csv')
+deleted_clients_data= deleted_clients_data.to_dict(orient='records')
+
 products_data = pd.read_csv('./class_product.csv')
 products_data = products_data.to_dict(orient='records')
 
@@ -1062,10 +1065,68 @@ def convert_docx_to_pdf(docx_filename, pdf_filename):
     
     # Close the Word document and application
     doc.Close()
-    word.Quit()    
+    word.Quit()   
+
+def apply_deletion_on_startup():
+    global deleted_clients_data
+    try:
+        with open('deletion_delay_weeks.txt', 'r') as f:
+            delay_weeks = int(f.read())
+    except (FileNotFoundError, ValueError):
+        print("Fichier de délai de suppression non trouvé ou contenu invalide.")
+        return
+
+    # Calculer la date de suppression basée sur le délai en semaines
+    deletion_date = datetime.date.today() - timedelta(weeks=delay_weeks)
+    deletion_date = datetime.datetime.combine(deletion_date, datetime.datetime.min.time())
+
+    # Filtrer deleted_clients_data
+    updated_deleted_clients_data = [client for client in deleted_clients_data if datetime.datetime.strptime(client['DateSuppr'], '%d/%m/%Y') >= deletion_date]
+
+    # Mettre à jour deleted_clients_data
+    deleted_clients_data = updated_deleted_clients_data
+
+    # Mettre à jour le fichier CSV
+    df = pd.DataFrame(updated_deleted_clients_data)
+    df.to_csv('deleted_clients.csv', index=False)
+
+    print(f"Les enregistrements des clients supprimés ont été mis à jour, en conservant ceux après {deletion_date.strftime('%d/%m/%Y')}.")
+    # try:
+    #     # Étape 1: Lire la date de suppression du fichier
+    #     with open('deletion_date.txt', 'r') as f:
+    #         deletion_date_str = f.read()
+    #     deletion_date = datetime.strptime(deletion_date_str, '%d/%m/%Y')#'%Y-%m-%d')
+    # except (FileNotFoundError, ValueError):
+    #     print("Date de suppression non définie ou fichier manquant. Opération annulée.")
+    #     return
+
+    # # Étape 2: Filtrer deleted_clients_data pour garder les clients dont la date de suppression est inférieure à la date de suppression
+    # updated_deleted_clients_data = [client for client in deleted_clients_data if datetime.strptime(client['DateSuppr'], '%d/%m/%Y') < deletion_date]
+
+    # # Étape 2: Charger les données des clients supprimés depuis le CSV
+    # # try:
+    # #     df = pd.read_csv('deleted_clients.csv', parse_dates=['DeletionDate'])
+    # # except FileNotFoundError:
+    # #     print("Fichier des clients supprimés introuvable.")
+    # #     return
+
+    # # Étape 3: Mettre à jour le fichier CSV
+    # # Convertir updated_deleted_clients_data en DataFrame puis enregistrer dans le fichier CSV
+    # df = pd.DataFrame(updated_deleted_clients_data)
+    # df.to_csv('deleted_clients.csv', index=False)
+    # # Étape 3 & 4: Filtrer pour garder les clients dont la date de suppression est inférieure à la date de suppression
+    # # df_filtered = df[df['DeletionDate'] < deletion_date]
+
+    # # Étape 4: Mettre à jour la variable deleted_clients_data avec les données filtrées
+    # deleted_clients_data = updated_deleted_clients_data
+    # # Étape 5: Écrire les données filtrées de retour dans le fichier CSV
+    # # df_filtered.to_csv('deleted_clients.csv', index=False)
+    # print("Les enregistrements des clients supprimés ont été mis à jour.")
+
 
 # Création de la fenêtre principale
 def create_main_window():
+    apply_deletion_on_startup()
     window = tk.Tk()
     window.title("Gestion d'entreprise")
     window.geometry("1000x600+0+0")
@@ -1073,6 +1134,8 @@ def create_main_window():
     navbar.pack()
     frame = tk.Frame(window)
     frame.pack()
+
+    
         
     def Products():     
         Clear_widgets(frame)
@@ -1829,7 +1892,7 @@ def create_main_window():
                 root.destroy()
 
             root = tk.Tk()
-            root.title("Confiramtion")
+            root.title("Confirmation")
             root.geometry('350x150')
 
             label = tk.Label(root, text="Voulez vous vraiment supprimer cette livraison ?")
@@ -2505,6 +2568,8 @@ def create_main_window():
                 df = pd.read_csv('./class_client.csv', sep = ',')
 
                 deleted_client = df[df['ID'] == item_id]
+                # date of suppression
+                deleted_client['DateSuppr'] = date.today().strftime("%d/%m/%Y")
                 # add the deleted client to the deleted_clients csv file for archive
                 with open('./deleted_clients.csv', 'a', newline='') as f:
                     deleted_client.to_csv(f, header=f.tell()==0, index=False)
@@ -2607,54 +2672,155 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
 
-        def search_client(attribute):
+        def search_client(search_value, attribute):
+            # search_value = search_entry.get()
+
+            # with open('class_client.csv', mode='r', encoding='utf-8') as file:
+            #     # Créer un objet reader pour lire le fichier CSV
+            #     csv_reader = csv.DictReader(file)
+        
+            #     # Initialiser une variable pour vérifier si on a trouvé au moins un client correspondant
+            #     found = False
+
+            #     # Initialiser une liste pour stocker les clients trouvés
+            #     found_clients = []
+
+            #     # Parcourir chaque ligne du fichier CSV
+            #     for row in csv_reader:
+            #         # Vérifier si la valeur recherchée correspond à l'attribut spécifié (Nom ou ID)
+            #         if search_value.lower() in row[attribute].lower():
+            #             found_clients.append(row)
+        
+            #             # Si aucun client correspondant n'a été trouvé, afficher un message
+            #     if not found:
+            #         print("Aucun client correspondant à la recherche.")
+            # Supprimez les anciens résultats de recherche
+            clients_tree.delete(*clients_tree.get_children())
+
+            # Dictionnaire pour stocker les résultats de recherche
+            search_results = []
+    
+            # Recherche insensible à la casse
+            search_value_lower = search_value.lower()
+
+            # Parcourir le dictionnaire clients_data à la recherche de correspondances
+            for client in clients_data:
+                if search_value_lower in str(client[attribute]).lower():
+                    search_results.append(client)
+    
+            # Affichage des résultats de recherche
+            if search_results:
+                for client in search_results:
+                    clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"]))
+            else:
+                messagebox.showinfo("Résultat de recherche", "Aucun client correspondant à la recherche.")
+
+        def search_clients_wrapper():
             search_value = search_entry.get()
-
-            with open('clients.csv', mode='r', encoding='utf-8') as file:
-                # Créer un objet reader pour lire le fichier CSV
-                csv_reader = csv.DictReader(file)
-        
-                # Initialiser une variable pour vérifier si on a trouvé au moins un client correspondant
-                found = False
-
-                # Initialiser une liste pour stocker les clients trouvés
-                found_clients = []
-
-                # Parcourir chaque ligne du fichier CSV
-                for row in csv_reader:
-                    # Vérifier si la valeur recherchée correspond à l'attribut spécifié (Nom ou ID)
-                    if search_value.lower() in row[attribute].lower():
-                        found_clients.append(row)
-        
-                        # Si aucun client correspondant n'a été trouvé, afficher un message
-                if not found:
-                    print("Aucun client correspondant à la recherche.")
-
+            search_attribute_value = search_attribute.get()
+            search_client(search_value, search_attribute_value)
 
         
 
 
-        # def get_sales_history():
-        #     selected_client = clients_tree.selection()
-        #     if selected_client:
-        #         client_id = clients_tree.item(selected_client)["values"][0]  
+        def open_deleted_clients_window():
 
-        #         client_sales = [sale for sale in sales_data if sale["Client ID"] == client_id]
+            def display_deleted_clients():
+                deleted_clients_tree.delete(*deleted_clients_tree.get_children())
+                if not deleted_clients_tree.get_children():
+                    for client in deleted_clients_data:
+                        deleted_clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"],client['DateSuppr']))
+        
+            # Crée une nouvelle fenêtre pour afficher les paramètres
+            new_window = tk.Tk()
+            new_window.title("Clients Supprimés")
+
+            # tk.Label(new_root, text="Entrez la durée en jours:").pack()
+
+            # duration_entry = tk.Entry(reset_window)
+            # duration_entry.pack()
+
+            # confirm_button = tk.Button(reset_window, text="Confirmer", command=lambda: reset_history(duration_entry.get()))
+            # confirm_button.pack()
+
+            deleted_clients_frame = tk.Frame(new_window)
+            deleted_clients_frame.pack()
+
+            deleted_clients_tree_frame = tk.Frame(deleted_clients_frame)
+            deleted_clients_tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+            
+
+            # Création du Treeview dans la fenêtre popup
+            columns_deleted_clients = ("ID", "Nom", "Adresse", "Email", "Phone Number", "DeletionDate")
+            deleted_clients_tree = ttk.Treeview(deleted_clients_tree_frame, columns=columns_deleted_clients, show="headings")
+    
+            # Configuration des colonnes
+            for col in columns_deleted_clients:
+                deleted_clients_tree.heading(col, text=col)
+                deleted_clients_tree.column(col, width=120)
+
+            # Ajout d'un scrollbar
+            scrollbar = ttk.Scrollbar(deleted_clients_tree_frame, orient="vertical", command=deleted_clients_tree.yview)
+            deleted_clients_tree.configure(yscroll=scrollbar.set)
+            scrollbar.pack(side='right', fill='y')
+            deleted_clients_tree.pack(fill='both', expand=True)
+
+            # Remplissez le Treeview avec les données des clients supprimés
+            # ... (Votre logique pour remplir le Treeview)
+
+            # Ajout des boutons de gestion du délai de suppression
+            # buttons
+            button_frame_deleted_clients = tk.Frame(deleted_clients_frame)
+            button_frame_deleted_clients.pack()
+
+            display_deleted_clients = ctk.CTkButton(button_frame_deleted_clients, text="Liste des Clients Supprimés", command=display_deleted_clients)
+            display_deleted_clients.pack(side=tk.LEFT, padx=5)
+            # delay_frame = tk.Frame(new_root)
+            # delay_frame.pack(pady=5)
+
+            delay_label = tk.Label(button_frame_deleted_clients, text="Délai de suppression (nb semaines):")
+            delay_label.pack(side=tk.LEFT, padx=5)
+
+            delay_entry = tk.Entry(button_frame_deleted_clients)
+            delay_entry.pack(side=tk.LEFT, padx=5)
+
+            set_delay_button = tk.Button(button_frame_deleted_clients, text="Définir Délai", command=lambda: set_deletion_delay())
+            set_delay_button.pack(side=tk.LEFT, padx=5)
+
+            # Définissez la fonction pour gérer le délai de suppression ici
+            def set_deletion_delay():
+                try:
+                    deletion_delay = int(delay_entry.get())
+                    # Enregistrer le délai en semaines dans le fichier
+                    with open('deletion_delay_weeks.txt', 'w') as f:
+                        f.write(str(deletion_delay))
+                    messagebox.showinfo("Succès", f"Délai de suppression défini à {deletion_delay} semaines.")
+                except ValueError:
+                    messagebox.showerror("Erreur", "Veuillez entrer un nombre entier valide.")
+
+            
+
+            # Assurez-vous que la fenêtre popup est modale
+            new_window.grab_set()
+            new_window.focus_set()
+            new_window.wait_window()
 
         
-        #         for item in sales_tree.get_children():
-        #             sales_tree.delete(item)
+        def reset_history(duration):
+            try:
+                duration_in_days = int(duration)
+                # Ici, vous implémenterez la logique pour nettoyer l'historique basé sur la durée
+                # Par exemple, vous pouvez parcourir le fichier CSV et supprimer les entrées plus anciennes que la durée spécifiée
+                print(f"Réinitialisation de l'historique des clients supprimés pour les enregistrements plus vieux que {duration_in_days} jours.")
+            except ValueError:
+                messagebox.showerror("Erreur", "Veuillez entrer un nombre valide.")
+
 
         
-        #         for sale in client_sales:
-        #             sales_tree.insert("", tk.END, values=(
-        #                 sale["Sale Date"], sale["Product ID"], sale["Quantity Sold"], 
-        #                 sale["Sale Price"], sale["Client ID"]))
 
-        #         if len(client_sales) == 0:
-        #             messagebox.showinfo("Information", "Ce client n'a pas d'historique de ventes.")
-        #     else:
-        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client.")
+
+        
 
         
         # def total_spent(start_date=None, end_date=None):
@@ -2738,9 +2904,13 @@ def create_main_window():
         phone_entry.config(validatecommand=(frame.register(validate_phone_number), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
         phone_entry.pack(side=tk.LEFT, padx=5)
 
-        search_label = tk.Label(input_frame_clients, text="Rechercher")
+        search_frame = tk.Frame(frame)
+        search_frame.pack(pady=5)
+
+
+        search_label = tk.Label(search_frame, text="Rechercher")
         search_label.pack(side=tk.LEFT, padx=5)
-        search_entry = tk.Entry(input_frame_clients)
+        search_entry = tk.Entry(search_frame)
         search_entry.pack(side=tk.LEFT, padx=5)
 
 
@@ -2760,24 +2930,21 @@ def create_main_window():
         modify_button_clients = tk.Button(button_frame_clients, text="Modifier Client", command=modify_client)
         modify_button_clients.pack(side=tk.LEFT, padx=5)
 
-        search_button = tk.Button(input_frame_clients, text="Rechercher", command=search_client(search_attribute))
-        search_button.pack()
+        deleted_clients_button = tk.Button(button_frame_clients, text="Clients Supprimés", command=open_deleted_clients_window)
+        deleted_clients_button.pack(side=tk.LEFT, padx=5)
+
+        search_button = tk.Button(search_frame, text="Rechercher", command=search_clients_wrapper)
+        search_button.pack(side=tk.LEFT, padx=5)
 
         # Créer un menu déroulant pour choisir l'attribut de recherche
         search_attribute = tk.StringVar()
         search_attribute.set("Name")  # Valeur par défaut
-        search_options = ttk.Combobox(input_frame_clients, textvariable=search_attribute)
-        search_options['values'] = ("Name", "ID")
+        search_options = ttk.Combobox(search_frame, textvariable=search_attribute)
+        search_options['values'] = ("ID", "Name")
         search_options.pack()
 
         exit_button = tk.Button(button_frame_clients, text="Quitter", command=frame.quit)
         exit_button.pack(side=tk.LEFT, padx=5)
-
-        # get_order_history_button = tk.Button(button_frame_clients, text='Historique Commandes', command=get_order_history)
-        # get_order_history_button.pack(side=tk.LEFT, padx=5)
-
-        # unpaid_orders_button = tk.Button(button_frame_clients, text="Commandes impayées", command=get_unpaid_orders)
-        # unpaid_orders_button.pack(side=tk.LEFT, padx=5)
 
 
     #//////////////////////////// INTERFACE ORDER ///////////////////////////////////////////
