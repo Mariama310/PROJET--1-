@@ -1536,7 +1536,7 @@ def create_main_window():
         titre_label = tk.Label(frame, text="Fournisseurs", font=("Arial", 16))
         titre_label.pack(pady=5)
 
-        columns_suppliers = ("Supplier ID", "Name", "Address", "Phone Number", "Contact Person", "Email")
+        columns_suppliers = ("Fournisseur ID", "Nom de l'entreprise", "Adresse", "Numéro de tel", "Nom du Contact ", "Email")
 
         tree_frame_suppliers = tk.Frame(frame)
         tree_frame_suppliers.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -1591,9 +1591,9 @@ def create_main_window():
         button_frame_suppliers = tk.Frame(frame)
         button_frame_suppliers.pack(pady=10)
         
-        display_refresh_suppliers = tk.Button(button_frame_suppliers, text="Liste des fournisseurs", command=refresh_suppliers)
-        display_refresh_suppliers.pack(side=tk.LEFT, padx=5)
 
+        display_sales = ctk.CTkButton(button_frame_suppliers, text="Liste des fournisseurs", command=refresh_suppliers)
+        display_sales.pack(side=tk.LEFT, padx=5)
         add_button_suppliers = tk.Button(button_frame_suppliers, text="Ajouter Fournisseur", command=add_supplier)
         add_button_suppliers.pack(side=tk.LEFT, padx=5)
 
@@ -1605,7 +1605,7 @@ def create_main_window():
 
 
 
-        button_refresh_suppliers = tk.Button(button_frame_suppliers, text="Rafraîchir", command=refresh_suppliers)
+        button_refresh_suppliers = tk.Button(button_frame_suppliers, text="Rafraîchir la page", command=refresh_suppliers)
         button_refresh_suppliers.pack(side=tk.LEFT, padx=5)
 
     def Sales():
