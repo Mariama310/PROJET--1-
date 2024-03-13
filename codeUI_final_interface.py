@@ -2542,7 +2542,7 @@ def create_main_window():
         def refresh_clients_table():
             clients_tree.delete(*clients_tree.get_children())
             for client in clients_data:
-                clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"]))
+                clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["NPhone Number"]))
         
         
         def double_click_client(event):
@@ -2560,20 +2560,59 @@ def create_main_window():
                     client_address_entry.insert(tk.END, values[2])
                     email_entry.insert(tk.END, values[3])
                     phone_entry.insert(tk.END, values[4])
+        
             
+        # def delete_client():
+        #     selected_item = clients_tree.selection()
+        #     if selected_item:
+        #         item_id = clients_tree.item(selected_item)["values"][0]
+        #         df = pd.read_csv('./class_client.csv', sep = ',')
+
+        #         deleted_client = df[df['ID'] == item_id]
+        #         # date of suppression
+        #         deleted_client['DateSuppr'] = date.today().strftime("%d/%m/%Y")
+        #         # add the deleted client to the deleted_clients csv file for archive
+        #         with open('./deleted_clients.csv', 'a', newline='') as f:
+        #             deleted_client.to_csv(f, header=f.tell()==0, index=False)
+
+
+        #         df = df[df['ID'] != item_id]
+        #         df.to_csv('./class_client.csv', index=False)
+        #         for client in clients_data:
+        #             if client["ID"] == item_id:
+        #                 clients_data.remove(client)
+        #                 break
+                
+        #         clients_tree.delete(selected_item)
+        #         refresh_client_ids()
+        #         refresh_clients_table()
+        #     else:
+        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
+
+
         def delete_client():
             selected_item = clients_tree.selection()
             if selected_item:
                 item_id = clients_tree.item(selected_item)["values"][0]
-                df = pd.read_csv('./class_client.csv', sep = ',')
-
+        
+                #
+        
+                # Convertir les chaînes de date en objets datetime pour la comparaison
+                livraison_data['order_date_'] = pd.to_datetime(livraison_data['date'], format='%d/%m/%Y')
+        
+                # Vérifier les conditions
+                has_unpaid_orders = order_instances[(order_instances['client_id'] == item_id) & (order_instances['statut'] == 'Non Payée')].any().any()
+                has_deliveries_scheduled = livraison_data[(livraison_data['client_id'] == item_id) & (livraison_data['date'] > (date.today() - timedelta(days=1)))].any().any()
+        
+                if has_unpaid_orders or has_deliveries_scheduled:
+                    messagebox.showwarning("Avertissement", "Impossible de supprimer le client car il a des commandes impayées ou des livraisons prévues.")
+                    return
+        
+                # Si les conditions sont remplies, procéder à la suppression du client
                 deleted_client = df[df['ID'] == item_id]
-                # date of suppression
                 deleted_client['DateSuppr'] = date.today().strftime("%d/%m/%Y")
-                # add the deleted client to the deleted_clients csv file for archive
                 with open('./deleted_clients.csv', 'a', newline='') as f:
                     deleted_client.to_csv(f, header=f.tell()==0, index=False)
-
 
                 df = df[df['ID'] != item_id]
                 df.to_csv('./class_client.csv', index=False)
@@ -2581,13 +2620,13 @@ def create_main_window():
                     if client["ID"] == item_id:
                         clients_data.remove(client)
                         break
-                
+        
                 clients_tree.delete(selected_item)
                 refresh_client_ids()
                 refresh_clients_table()
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
-
+        
         
         def add_client():
             name = client_name_entry.get()
@@ -2702,6 +2741,8 @@ def create_main_window():
     
             # Recherche insensible à la casse
             search_value_lower = search_value.lower()
+            if search_value_lower == 'nom' :
+                search_value_lower = 'name'
 
             # Parcourir le dictionnaire clients_data à la recherche de correspondances
             for client in clients_data:
@@ -2752,7 +2793,7 @@ def create_main_window():
             
 
             # Création du Treeview dans la fenêtre popup
-            columns_deleted_clients = ("ID", "Nom", "Adresse", "Email", "Phone Number", "DeletionDate")
+            columns_deleted_clients = ("ID", "Nom", "Adresse", "Email", "Numéro de Téléphone", "Date de Suppression")
             deleted_clients_tree = ttk.Treeview(deleted_clients_tree_frame, columns=columns_deleted_clients, show="headings")
     
             # Configuration des colonnes
@@ -2806,50 +2847,35 @@ def create_main_window():
             new_window.focus_set()
             new_window.wait_window()
 
-        
-        def reset_history(duration):
-            try:
-                duration_in_days = int(duration)
-                # Ici, vous implémenterez la logique pour nettoyer l'historique basé sur la durée
-                # Par exemple, vous pouvez parcourir le fichier CSV et supprimer les entrées plus anciennes que la durée spécifiée
-                print(f"Réinitialisation de l'historique des clients supprimés pour les enregistrements plus vieux que {duration_in_days} jours.")
-            except ValueError:
-                messagebox.showerror("Erreur", "Veuillez entrer un nombre valide.")
-
 
         
-
-
+        def total_spent(start_date=None, end_date=None):
+            client_id = int(id_entry.get()) if id_entry.get().isnumeric() else None
+            
+            if client_id:
+                
         
+                client_orders = [order for order in order_instances if order.client.clt_id == client_id]
+                # Si des dates de début et de fin sont spécifiées, filtrer les ventes dans cette plage (à implémenter)
+                if start_date and end_date:
+                    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+                    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+                    client_orders = [order for order in client_orders if start_date <= datetime.datetime.strptime(order.odrer_date, "%Y-%m-%d") <= end_date]
 
-        
-        # def total_spent(start_date=None, end_date=None):
-        #     selected_client = clients_tree.selection()
-        #     if selected_client:
-        #         client_id = clients_tree.item(selected_client)["values"][0] 
+                # Calculate the total amount spent
+                total_amount = sum(order.price for order in client_orders)
 
-        
-        #         client_sales = [sale for sale in sales_data if sale["Client ID"] == client_id]
-        #         # Si des dates de début et de fin sont spécifiées, filtrer les ventes dans cette plage (à implémenter)
-        #         if start_date and end_date:
-        #             start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-        #             end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-        #             client_sales = [sale for sale in client_sales if start_date <= datetime.datetime.strptime(sale["Sale Date"], "%Y-%m-%d") <= end_date]
-
-        #         # Calculate the total amount spent
-        #         total_amount = sum(float(sale["Sale Price"]) * int(sale["Quantity Sold"]) for sale in client_sales)
-
-        #         # Display 
-        #         messagebox.showinfo("Total dépensé", f"Le client {client_id} a dépensé un total de {total_amount:.2f} unités.")
-        #     else:
-        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client.")
+                # Display 
+                messagebox.showinfo("Total dépensé", f"Le client {client_id} a dépensé un total de {total_amount:.2f} DT.")
+            else:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client.")
 
 
 
         titre_label = tk.Label(frame, text="Clients", font=("Arial", 16))
         titre_label.pack(pady=5)
         
-        columns_clients = ("ID", "Nom", "Address", "Email", "Numéro de téléphone")
+        columns_clients = ("ID", "Nom", "Addresse", "Email", "Numéro de téléphone")
         
         tree_frame = tk.Frame(frame)
         tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -2930,6 +2956,9 @@ def create_main_window():
         modify_button_clients = tk.Button(button_frame_clients, text="Modifier Client", command=modify_client)
         modify_button_clients.pack(side=tk.LEFT, padx=5)
 
+        total_spent_button = tk.Button(button_frame_clients, text="Total dépensé", command=total_spent)
+        total_spent_button.pack(side=tk.LEFT, padx=5)
+
         deleted_clients_button = tk.Button(button_frame_clients, text="Clients Supprimés", command=open_deleted_clients_window)
         deleted_clients_button.pack(side=tk.LEFT, padx=5)
 
@@ -2940,7 +2969,7 @@ def create_main_window():
         search_attribute = tk.StringVar()
         search_attribute.set("Name")  # Valeur par défaut
         search_options = ttk.Combobox(search_frame, textvariable=search_attribute)
-        search_options['values'] = ("ID", "Name")
+        search_options['values'] = ("ID", "Nom")
         search_options.pack()
 
         exit_button = tk.Button(button_frame_clients, text="Quitter", command=frame.quit)
@@ -3127,7 +3156,7 @@ def create_main_window():
             orders_tree.delete(*orders_tree.get_children())
             for order in order_instances:
                 orders_tree.insert("", tk.END, values=(
-                    order.order_id, order.order_date, order.client.id, order.get_str_Products(),
+                    order.order_id, order.order_date, order.client.clt_id, order.get_str_Products(),
                     order.payment_type, 'Oui' if order.pompe else 'Non', order.statut, order.price_paid, order.price))
         
         # historique par client
