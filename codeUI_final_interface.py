@@ -1129,13 +1129,27 @@ def create_main_window():
     apply_deletion_on_startup()
     window = tk.Tk()
     window.title("Gestion d'entreprise")
-    window.geometry("1000x600+0+0")
-    navbar = tk.Frame(window)
-    navbar.pack()
-    frame = tk.Frame(window)
-    frame.pack()
+    window.geometry("1200x700+0+0")
+    frame = tk.Frame(window,bg='white')
+    frame.pack(side="right", fill="both", expand=True)
 
-    
+        # Style pour les boutons
+    style = ttk.Style()
+    style.configure('TButton', font=('Helvetica', 12))
+        # Barre latérale gauche pour les boutons
+    sidebar_frame = tk.Frame(window, bg='gray', width=200, height=700)
+    sidebar_frame.pack(side="left", fill="y")
+
+        # Charger et afficher le logo en haut de la barre latérale
+    # Assurez-vous que le chemin vers votre image est correct
+    try:
+        logo_image = Image.open("./icon.png")
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(sidebar_frame, image=logo_photo, bg='#333940')
+        logo_label.pack(padx=18, pady=18)
+    except IOError:
+        print("Le fichier du logo n'a pas été trouvé.")
+
         
     def Products():     
         Clear_widgets(frame)
@@ -1251,7 +1265,7 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à modifier.")
     # Create the table to display products data
-        titre_label = tk.Label(frame, text="Products", font=("Arial", 16))
+        titre_label = tk.Label(frame, text="Poduits", font=("Arial", 16))
         titre_label.pack(pady=5)
         
         columns_products = ("product_id", "description", "price", "quantity_in_stock", "historique")
@@ -1270,7 +1284,7 @@ def create_main_window():
         
         for col in columns_products:
             products_tree.heading(col, text=col)
-            products_tree.column(col, width=5)
+            products_tree.column(col, width=150)
 
         products_tree.pack(fill=tk.BOTH, expand=True, pady=5)
         products_tree.bind("<Double-1>", double_click_product)
@@ -1279,31 +1293,28 @@ def create_main_window():
         input_frame_products = tk.Frame(frame)
         input_frame_products.pack()
 
-        product_id_label = tk.Label(input_frame_products, text="ID du produit :")
-        product_id_label.pack(side=tk.LEFT, padx=5)
-        product_id_entry = tk.Entry(input_frame_products)
-        product_id_entry.pack(side=tk.LEFT, padx=5)
+        fields = ["product_id", "description", "price", "quantity_in_stock", "historique"]
 
-        description_label = tk.Label(input_frame_products, text="Description :")
-        description_label.pack(side=tk.LEFT, padx=5)
-        description_entry = tk.Entry(input_frame_products)
-        description_entry.pack(side=tk.LEFT, padx=5)
+        entries = []
 
+        for idx, field_text in enumerate(fields):
+            row_num = idx // 2
+            col_num = idx % 2 * 2 + 1
 
-        price_label = tk.Label(input_frame_products, text="Prix :")
-        price_label.pack(side=tk.LEFT, padx=5)
-        price_entry = tk.Entry(input_frame_products)
-        price_entry.pack(side=tk.LEFT, padx=5)
+            label = tk.Label(input_frame_products, text=f"{field_text} :")
+            label.grid(row=row_num, column=col_num - 1, padx=5, pady=5, sticky="e")
 
-        quantity_label = tk.Label(input_frame_products, text="Quantité :")
-        quantity_label.pack(side=tk.LEFT, padx=5)
-        quantity_entry = tk.Entry(input_frame_products)
-        quantity_entry.pack(side=tk.LEFT, padx=5)
+            entry = tk.Entry(input_frame_products)
+            entry.grid(row=row_num, column=col_num, padx=5, pady=5)
+            entries.append(entry)
 
-        historique_label = tk.Label(input_frame_products, text="Historique :")
-        historique_label.pack(side=tk.LEFT, padx=5)
-        historique_entry = tk.Entry(input_frame_products)
-        historique_entry.pack(side=tk.LEFT, padx=5)
+        # Access the entry fields using the list entries with specific names
+        product_id_entry = entries[0]
+        description_entry = entries[1]
+        price_entry = entries[2]
+        quantity_entry = entries[3]
+        historique_entry = entries[4]
+
         
         button_frame_products = tk.Frame(frame)
         button_frame_products.pack(pady=5)
@@ -1313,13 +1324,13 @@ def create_main_window():
         # Add the buttons for adding/modifying a product
 
 
-        add_button_products = tk.Button(button_frame_products, text="Ajouter Produit", command=add_product)
+        add_button_products = ctk.CTkButton(button_frame_products, text="Ajouter Produit", command=add_product)
         add_button_products.pack(side=tk.LEFT, padx=5)
 
-        delete_button_orders = tk.Button(button_frame_products, text="Supprimer Produit", command=delete_product)
+        delete_button_orders = ctk.CTkButton(button_frame_products, text="Supprimer Produit", command=delete_product)
         delete_button_orders.pack(side=tk.LEFT, padx=5)
 
-        modify_button_orders = tk.Button(button_frame_products, text="Modifier Produit", command=modify_product)
+        modify_button_orders = ctk.CTkButton(button_frame_products, text="Modifier Produit", command=modify_product)
         modify_button_orders.pack(side=tk.LEFT, padx=5)
 
         
@@ -1586,32 +1597,26 @@ def create_main_window():
         contact_person_entry_supplier = entries[4]
         email_entry_supplier = entries[5]
 
-
         # Add the buttons for adding/modifying a supplier
         button_frame_suppliers = tk.Frame(frame)
         button_frame_suppliers.pack(pady=10)
         
-
         display_sales = ctk.CTkButton(button_frame_suppliers, text="Liste des fournisseurs", command=refresh_suppliers)
         display_sales.pack(side=tk.LEFT, padx=5)
-        add_button_suppliers = tk.Button(button_frame_suppliers, text="Ajouter Fournisseur", command=add_supplier)
+        add_button_suppliers = ctk.CTkButton(button_frame_suppliers, text="Ajouter Fournisseur", command=add_supplier)
         add_button_suppliers.pack(side=tk.LEFT, padx=5)
 
-        delete_button_suppliers = tk.Button(button_frame_suppliers, text="Supprimer Fournisseur", command=delete_supplier)
+        delete_button_suppliers = ctk.CTkButton(button_frame_suppliers, text="Supprimer Fournisseur", command=delete_supplier)
         delete_button_suppliers.pack(side=tk.LEFT, padx=5)
 
-        modify_button_suppliers = tk.Button(button_frame_suppliers, text="Modifier Fournisseur", command=modify_supplier)
+        modify_button_suppliers = ctk.CTkButton(button_frame_suppliers, text="Modifier Fournisseur", command=modify_supplier)
         modify_button_suppliers.pack(side=tk.LEFT, padx=5)
 
-
-
-        button_refresh_suppliers = tk.Button(button_frame_suppliers, text="Rafraîchir la page", command=refresh_suppliers)
+        button_refresh_suppliers = ctk.CTkButton(button_frame_suppliers, text="Rafraîchir la page", command=refresh_suppliers)
         button_refresh_suppliers.pack(side=tk.LEFT, padx=5)
 
     def Sales():
         Clear_widgets(frame)
-        tk.Label(frame,text="Sales").pack()
-        
         def add_sale():
             #sale_id = sale_id_entry.get()
             date = sale_date_entry.get()
@@ -1799,74 +1804,56 @@ def create_main_window():
 
         for col in columns_sales:
             sales_tree.heading(col, text=col)
-            sales_tree.column(col, width=5)
+            sales_tree.column(col, width=150)
 
-        sales_tree.pack(fill=tk.BOTH, expand=True, pady=5)
+        sales_tree.pack(fill=tk.BOTH, expand=True, pady=10)
         sales_tree.bind("<Double-1>", double_click_sale)
         
     # Add the labels and input fields for adding/modifying a sale
         input_frame_sales = tk.Frame(frame)
         input_frame_sales.pack()
 
-        sale_id_label = tk.Label(input_frame_sales, text="ID de la vente :")
-        sale_id_label.pack(side=tk.LEFT, padx=5)
-        sale_id_entry = tk.Entry(input_frame_sales, validate="key")
-        sale_id_entry.pack(side=tk.LEFT, padx=5)
+        fields = ["Sale ID","Sale Date","Product ID","Quantity Sold","Sale Price","Client ID"]
 
-        sale_date_label = tk.Label(input_frame_sales, text="Date de vente:")
-        sale_date_label.pack(side=tk.LEFT, padx=5)
-        sale_date_entry = tk.Entry(input_frame_sales, validate="key")
-        """checker si la sale_date est valide"""
-        #sale_date_entry.config(valsale_dateatecommand=(root.register(valisale_date_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        sale_date_entry.pack(side=tk.LEFT, padx=5)
+        entries = []
 
-        product_id_label = tk.Label(input_frame_sales, text="ID du Produit :")
-        product_id_label.pack(side=tk.LEFT, padx=5)
-        product_id_entry = tk.Entry(input_frame_sales, validate="key")
-        product_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        product_id_entry.pack(side=tk.LEFT, padx=5)
+        for idx, field_text in enumerate(fields):
+            row_num = idx // 2
+            col_num = idx % 2 * 2 + 1
+            label = tk.Label(input_frame_sales, text=f"{field_text} :")
+            label.grid(row=row_num, column=col_num - 1, padx=5, pady=5, sticky="e")
 
-        quantity_sold_label = tk.Label(input_frame_sales, text="Quantité vendue :")
-        quantity_sold_label.pack(side=tk.LEFT, padx=5)
-        quantity_sold_entry = tk.Entry(input_frame_sales, validate="key")
-        "checker si la quantité est valide : 1. en tant qu'int positif;"               #check
-        "2. en considérant le stock"
-        quantity_sold_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        quantity_sold_entry.pack(side=tk.LEFT, padx=5)
+            entry = tk.Entry(input_frame_sales)
+            entry.grid(row=row_num, column=col_num, padx=5, pady=5)
+            entries.append(entry)
 
-        sale_price_label = tk.Label(input_frame_sales, text="Prix de vente:")
-        sale_price_label.pack(side=tk.LEFT, padx=5)
-        sale_price_entry = tk.Entry(input_frame_sales, validate="key")
-        """checker si le prix est valide: 1. en tant que float"""
-        sale_price_entry.config(validatecommand=(frame.register(is_price_input), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        sale_price_entry.pack(side=tk.LEFT, padx=5)
-
-        client_id_label = tk.Label(input_frame_sales, text="ID du client:")
-        client_id_label.pack(side=tk.LEFT, padx=5)
-        client_id_entry = tk.Entry(input_frame_sales, validate="key")
-        client_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        """checker si le client existe bel et bien dans la database"""
-        client_id_entry.pack(side=tk.LEFT, padx=5)
+        # Access the entry fields using the list entries with specific names
+        sale_id_entry = entries[0]
+        sale_date_entry = entries[1]
+        product_id_entry = entries[2]
+        quantity_sold_entry = entries[3]
+        sale_price_entry = entries[4]
+        client_id_entry = entries[5]
 
     # Add the buttons for adding/modifying a sale
         button_frame_sales = tk.Frame(frame)
-        button_frame_sales.pack(pady=5)
+        button_frame_sales.pack(pady=10)
 
         display_sales = ctk.CTkButton(button_frame_sales, text="Liste des ventes", command=display_sales)
         display_sales.pack(side=tk.LEFT, padx=5)
 
-        add_button_sales = tk.Button(button_frame_sales, text="Ajouter Vente", command=add_sale)
+        add_button_sales = ctk.CTkButton(button_frame_sales, text="Ajouter Vente", command=add_sale)
         add_button_sales.pack(side=tk.LEFT, padx=5)
 
-        delete_button_sales = tk.Button(button_frame_sales, text="Supprimer Vente", command=delete_sale)
+        delete_button_sales =ctk.CTkButton(button_frame_sales, text="Supprimer Vente", command=delete_sale)
         delete_button_sales.pack(side=tk.LEFT, padx=5)
 
-        modify_button_sales = tk.Button(button_frame_sales, text="Modifier Vente", command=modify_sale)
+        modify_button_sales = ctk.CTkButton(button_frame_sales, text="Modifier Vente", command=modify_sale)
         modify_button_sales.pack(side=tk.LEFT, padx=5)
         
     def Deliveries():
         Clear_widgets(frame)
-        tk.Label(frame,text="Deliveries").pack()
+        tk.Label(frame).pack()
         
         def supress_livraison():
     
@@ -2391,12 +2378,9 @@ def create_main_window():
 
         style = ttk.Style()
         style.configure('Treeview', rowheight=25)
-
-        
+       
         livraison_tree = ttk.Treeview(tree_frame, columns=columns_livraison, show="headings", style='Custom.Treeview')
-
         scrollbar.config(command=livraison_tree.yview)
-
         
         for col in columns_livraison:
             livraison_tree.heading(col, text=col)
@@ -2404,6 +2388,31 @@ def create_main_window():
         
         livraison_tree.pack(fill=tk.BOTH, expand=True, pady=10)
         livraison_tree.bind("<Double-1>", double_click_livraison)
+
+        # Add the labels and input fields for adding/modifying a supplier
+        input_frame_deliverie = tk.Frame(frame)
+        input_frame_deliverie.pack()
+
+        fields = ["N° de livraison", "Client", "Adresse", "ID produit"]
+
+        entries = []
+
+        for idx, field_text in enumerate(fields):
+            row_num = idx // 2
+            col_num = idx % 2 * 2 + 1
+
+            label = tk.Label(input_frame_deliverie, text=f"{field_text} :")
+            label.grid(row=row_num, column=col_num - 1, padx=5, pady=5, sticky="e")
+
+            entry = tk.Entry(input_frame_deliverie)
+            entry.grid(row=row_num, column=col_num, padx=5, pady=5)
+            entries.append(entry)
+
+        # Access the entry fields using the list entries with specific names
+        n_entry = entries[0]
+        name_entry = entries[1]
+        order_entry = entries[2]
+        prod_entry = entries[3]
 
         class AutocompleteEntry(ttk.Combobox):
             def set_completion_list(self, completion_list):
@@ -2459,31 +2468,7 @@ def create_main_window():
         # Add the labels and input fields for adding/modifying a client
         input_frame_livraison = tk.Frame(frame)
         input_frame_livraison.pack()
-        
-        n_label = tk.Label(input_frame_livraison, text="N° de livraison :")
-        n_label.pack(side=tk.LEFT, padx=5)
-        n_entry = tk.Entry(input_frame_livraison)
-        n_entry.pack(side=tk.LEFT, padx=5)
-        
-        
-        name_label = tk.Label(input_frame_livraison, text="Nom :")
-        name_label.pack(side=tk.LEFT, padx=5)
-        name_entry = AutocompleteEntry(input_frame_livraison, textvariable=entry_var)
-        name_entry.set_completion_list(names_list)
-        name_entry.pack(side=tk.LEFT, padx=5)
-        
-
-        
-        order_label = tk.Label(input_frame_livraison, text="N° de commande :")
-        order_label.pack(side=tk.LEFT, padx=5)
-        order_entry = tk.Entry(input_frame_livraison)
-        order_entry.pack(side=tk.LEFT, padx=5)
-
-        prod_label = tk.Label(input_frame_livraison, text="ID Produit :")
-        prod_label.pack(side=tk.LEFT, padx=5)
-        prod_entry = tk.Entry(input_frame_livraison)
-        prod_entry.pack(side=tk.LEFT, padx=5)
-        
+               
         # Add the buttons for adding/modifying a client
         button_frame_livraison = tk.Frame(frame)
         button_frame_livraison.pack(pady=10)
@@ -2491,16 +2476,16 @@ def create_main_window():
         display_liv = ctk.CTkButton(button_frame_livraison, text="Liste des livraisons", command=display_livraison)
         display_liv.pack(side=tk.LEFT, padx=5)
         
-        add_button_livraison = tk.Button(button_frame_livraison, text="Ajouter Livraison", command=lambda:page_livraison(1))
+        add_button_livraison = ctk.CTkButton(button_frame_livraison, text="Ajouter Livraison", command=lambda:page_livraison(1))
         add_button_livraison.pack(side=tk.LEFT, padx=5)
         
-        delete_button_livraison = tk.Button(button_frame_livraison, text="Supprimer Livraison", command= supress_livraison)
+        delete_button_livraison = ctk.CTkButton(button_frame_livraison, text="Supprimer Livraison", command= supress_livraison)
         delete_button_livraison.pack(side=tk.LEFT, padx=5)
         
-        modify_button_livraison = tk.Button(button_frame_livraison, text="Modifier Livraison",command= lambda: page_livraison(2))
+        modify_button_livraison = ctk.CTkButton(button_frame_livraison, text="Modifier Livraison",command= lambda: page_livraison(2))
         modify_button_livraison.pack(side=tk.LEFT, padx=5)
 
-        modify_button_livraison = tk.Button(button_frame_livraison, text="Créer bon de Livraison", command=bon_livraison)
+        modify_button_livraison = ctk.CTkButton(button_frame_livraison, text="Créer bon de Livraison", command=bon_livraison)
         modify_button_livraison.pack(side=tk.LEFT, padx=5)
         
     def Clients():
@@ -2542,7 +2527,7 @@ def create_main_window():
         def refresh_clients_table():
             clients_tree.delete(*clients_tree.get_children())
             for client in clients_data:
-                clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["NPhone Number"]))
+                clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"]))
         
         
         def double_click_client(event):
@@ -2560,59 +2545,20 @@ def create_main_window():
                     client_address_entry.insert(tk.END, values[2])
                     email_entry.insert(tk.END, values[3])
                     phone_entry.insert(tk.END, values[4])
-        
             
-        # def delete_client():
-        #     selected_item = clients_tree.selection()
-        #     if selected_item:
-        #         item_id = clients_tree.item(selected_item)["values"][0]
-        #         df = pd.read_csv('./class_client.csv', sep = ',')
-
-        #         deleted_client = df[df['ID'] == item_id]
-        #         # date of suppression
-        #         deleted_client['DateSuppr'] = date.today().strftime("%d/%m/%Y")
-        #         # add the deleted client to the deleted_clients csv file for archive
-        #         with open('./deleted_clients.csv', 'a', newline='') as f:
-        #             deleted_client.to_csv(f, header=f.tell()==0, index=False)
-
-
-        #         df = df[df['ID'] != item_id]
-        #         df.to_csv('./class_client.csv', index=False)
-        #         for client in clients_data:
-        #             if client["ID"] == item_id:
-        #                 clients_data.remove(client)
-        #                 break
-                
-        #         clients_tree.delete(selected_item)
-        #         refresh_client_ids()
-        #         refresh_clients_table()
-        #     else:
-        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
-
-
         def delete_client():
             selected_item = clients_tree.selection()
             if selected_item:
                 item_id = clients_tree.item(selected_item)["values"][0]
-        
-                #
-        
-                # Convertir les chaînes de date en objets datetime pour la comparaison
-                livraison_data['order_date_'] = pd.to_datetime(livraison_data['date'], format='%d/%m/%Y')
-        
-                # Vérifier les conditions
-                has_unpaid_orders = order_instances[(order_instances['client_id'] == item_id) & (order_instances['statut'] == 'Non Payée')].any().any()
-                has_deliveries_scheduled = livraison_data[(livraison_data['client_id'] == item_id) & (livraison_data['date'] > (date.today() - timedelta(days=1)))].any().any()
-        
-                if has_unpaid_orders or has_deliveries_scheduled:
-                    messagebox.showwarning("Avertissement", "Impossible de supprimer le client car il a des commandes impayées ou des livraisons prévues.")
-                    return
-        
-                # Si les conditions sont remplies, procéder à la suppression du client
+                df = pd.read_csv('./class_client.csv', sep = ',')
+
                 deleted_client = df[df['ID'] == item_id]
+                # date of suppression
                 deleted_client['DateSuppr'] = date.today().strftime("%d/%m/%Y")
+                # add the deleted client to the deleted_clients csv file for archive
                 with open('./deleted_clients.csv', 'a', newline='') as f:
                     deleted_client.to_csv(f, header=f.tell()==0, index=False)
+
 
                 df = df[df['ID'] != item_id]
                 df.to_csv('./class_client.csv', index=False)
@@ -2620,13 +2566,13 @@ def create_main_window():
                     if client["ID"] == item_id:
                         clients_data.remove(client)
                         break
-        
+                
                 clients_tree.delete(selected_item)
                 refresh_client_ids()
                 refresh_clients_table()
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
-        
+
         
         def add_client():
             name = client_name_entry.get()
@@ -2741,8 +2687,6 @@ def create_main_window():
     
             # Recherche insensible à la casse
             search_value_lower = search_value.lower()
-            if search_value_lower == 'nom' :
-                search_value_lower = 'name'
 
             # Parcourir le dictionnaire clients_data à la recherche de correspondances
             for client in clients_data:
@@ -2793,7 +2737,7 @@ def create_main_window():
             
 
             # Création du Treeview dans la fenêtre popup
-            columns_deleted_clients = ("ID", "Nom", "Adresse", "Email", "Numéro de Téléphone", "Date de Suppression")
+            columns_deleted_clients = ("ID", "Nom", "Adresse", "Email", "Phone Number", "DeletionDate")
             deleted_clients_tree = ttk.Treeview(deleted_clients_tree_frame, columns=columns_deleted_clients, show="headings")
     
             # Configuration des colonnes
@@ -2847,35 +2791,50 @@ def create_main_window():
             new_window.focus_set()
             new_window.wait_window()
 
+        
+        def reset_history(duration):
+            try:
+                duration_in_days = int(duration)
+                # Ici, vous implémenterez la logique pour nettoyer l'historique basé sur la durée
+                # Par exemple, vous pouvez parcourir le fichier CSV et supprimer les entrées plus anciennes que la durée spécifiée
+                print(f"Réinitialisation de l'historique des clients supprimés pour les enregistrements plus vieux que {duration_in_days} jours.")
+            except ValueError:
+                messagebox.showerror("Erreur", "Veuillez entrer un nombre valide.")
+
 
         
-        def total_spent(start_date=None, end_date=None):
-            client_id = int(id_entry.get()) if id_entry.get().isnumeric() else None
-            
-            if client_id:
-                
+
+
         
-                client_orders = [order for order in order_instances if order.client.clt_id == client_id]
-                # Si des dates de début et de fin sont spécifiées, filtrer les ventes dans cette plage (à implémenter)
-                if start_date and end_date:
-                    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-                    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-                    client_orders = [order for order in client_orders if start_date <= datetime.datetime.strptime(order.odrer_date, "%Y-%m-%d") <= end_date]
 
-                # Calculate the total amount spent
-                total_amount = sum(order.price for order in client_orders)
+        
+        # def total_spent(start_date=None, end_date=None):
+        #     selected_client = clients_tree.selection()
+        #     if selected_client:
+        #         client_id = clients_tree.item(selected_client)["values"][0] 
 
-                # Display 
-                messagebox.showinfo("Total dépensé", f"Le client {client_id} a dépensé un total de {total_amount:.2f} DT.")
-            else:
-                messagebox.showwarning("Avertissement", "Veuillez sélectionner un client.")
+        
+        #         client_sales = [sale for sale in sales_data if sale["Client ID"] == client_id]
+        #         # Si des dates de début et de fin sont spécifiées, filtrer les ventes dans cette plage (à implémenter)
+        #         if start_date and end_date:
+        #             start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        #             end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+        #             client_sales = [sale for sale in client_sales if start_date <= datetime.datetime.strptime(sale["Sale Date"], "%Y-%m-%d") <= end_date]
+
+        #         # Calculate the total amount spent
+        #         total_amount = sum(float(sale["Sale Price"]) * int(sale["Quantity Sold"]) for sale in client_sales)
+
+        #         # Display 
+        #         messagebox.showinfo("Total dépensé", f"Le client {client_id} a dépensé un total de {total_amount:.2f} unités.")
+        #     else:
+        #         messagebox.showwarning("Avertissement", "Veuillez sélectionner un client.")
 
 
 
         titre_label = tk.Label(frame, text="Clients", font=("Arial", 16))
         titre_label.pack(pady=5)
         
-        columns_clients = ("ID", "Nom", "Addresse", "Email", "Numéro de téléphone")
+        columns_clients = ("ID", "Nom", "Address", "Email", "Numéro de téléphone")
         
         tree_frame = tk.Frame(frame)
         tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -2903,41 +2862,35 @@ def create_main_window():
         input_frame_clients = tk.Frame(frame)
         input_frame_clients.pack()
 
-        client_id_label = tk.Label(input_frame_clients, text="ID de client :")
-        client_id_label.pack(side=tk.LEFT, padx=5)
-        id_entry = tk.Entry(input_frame_clients, validate="key")
-        id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        id_entry.pack(side=tk.LEFT, padx=5)
+        fields = ["ID", "Nom", "Address", "Email", "Numéro de téléphone","Rechercher"]
 
-        name_label = tk.Label(input_frame_clients, text="Nom :")
-        name_label.pack(side=tk.LEFT, padx=5)
-        client_name_entry = tk.Entry(input_frame_clients)
-        client_name_entry.pack(side=tk.LEFT, padx=5)
+        entries = []
 
-        client_address_label = tk.Label(input_frame_clients, text="Adresse :")
-        client_address_label.pack(side=tk.LEFT, padx=5)
-        client_address_entry = tk.Entry(input_frame_clients)
-        client_address_entry.pack(side=tk.LEFT, padx=5)
-    
-        email_label = tk.Label(input_frame_clients, text="E-mail :")
-        email_label.pack(side=tk.LEFT, padx=5)
-        email_entry = tk.Entry(input_frame_clients)
-        email_entry.pack(side=tk.LEFT, padx=5)
-    
-        phone_label = tk.Label(input_frame_clients, text="Numéro de téléphone :")
-        phone_label.pack(side=tk.LEFT, padx=5)
-        phone_entry = tk.Entry(input_frame_clients, validate="key")
+        for idx, field_text in enumerate(fields):
+            row_num = idx // 2
+            col_num = idx % 2 * 2 + 1
+
+            label = tk.Label(input_frame_clients, text=f"{field_text} :")
+            label.grid(row=row_num, column=col_num - 1, padx=5, pady=5, sticky="e")
+
+            entry = tk.Entry(input_frame_clients)
+            entry.grid(row=row_num, column=col_num, padx=5, pady=5)
+            entries.append(entry)
+
+        # Access the entry fields using the list entries with specific names
+        id_entry = entries[0]
+        client_name_entry = entries[1]
+        client_address_entry = entries[2]
+        email_entry = entries[3]
+        phone_entry=entries[4]
+        search_entry=entries[5]
+
+
+        id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))    
         phone_entry.config(validatecommand=(frame.register(validate_phone_number), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        phone_entry.pack(side=tk.LEFT, padx=5)
 
         search_frame = tk.Frame(frame)
         search_frame.pack(pady=5)
-
-
-        search_label = tk.Label(search_frame, text="Rechercher")
-        search_label.pack(side=tk.LEFT, padx=5)
-        search_entry = tk.Entry(search_frame)
-        search_entry.pack(side=tk.LEFT, padx=5)
 
 
         # buttons
@@ -2947,32 +2900,29 @@ def create_main_window():
         display_clients = ctk.CTkButton(button_frame_clients, text="Liste des Clients", command=display_clients)
         display_clients.pack(side=tk.LEFT, padx=5)
     
-        add_button_clients = tk.Button(button_frame_clients, text="Ajouter Client", command=add_client)
+        add_button_clients = ctk.CTkButton(button_frame_clients, text="Ajouter Client", command=add_client)
         add_button_clients.pack(side=tk.LEFT, padx=5)
     
-        delete_button_clients = tk.Button(button_frame_clients, text="Supprimer Client", command=delete_client)
+        delete_button_clients = ctk.CTkButton(button_frame_clients, text="Supprimer Client", command=delete_client)
         delete_button_clients.pack(side=tk.LEFT, padx=5)
     
-        modify_button_clients = tk.Button(button_frame_clients, text="Modifier Client", command=modify_client)
+        modify_button_clients = ctk.CTkButton(button_frame_clients, text="Modifier Client", command=modify_client)
         modify_button_clients.pack(side=tk.LEFT, padx=5)
 
-        total_spent_button = tk.Button(button_frame_clients, text="Total dépensé", command=total_spent)
-        total_spent_button.pack(side=tk.LEFT, padx=5)
-
-        deleted_clients_button = tk.Button(button_frame_clients, text="Clients Supprimés", command=open_deleted_clients_window)
+        deleted_clients_button = ctk.CTkButton(button_frame_clients, text="Clients Supprimés", command=open_deleted_clients_window)
         deleted_clients_button.pack(side=tk.LEFT, padx=5)
 
-        search_button = tk.Button(search_frame, text="Rechercher", command=search_clients_wrapper)
+        search_button = ctk.CTkButton(button_frame_clients, text="Rechercher", command=search_clients_wrapper)
         search_button.pack(side=tk.LEFT, padx=5)
 
         # Créer un menu déroulant pour choisir l'attribut de recherche
         search_attribute = tk.StringVar()
         search_attribute.set("Name")  # Valeur par défaut
         search_options = ttk.Combobox(search_frame, textvariable=search_attribute)
-        search_options['values'] = ("ID", "Nom")
+        search_options['values'] = ("ID", "Name")
         search_options.pack()
 
-        exit_button = tk.Button(button_frame_clients, text="Quitter", command=frame.quit)
+        exit_button = ctk.CTkButton(button_frame_clients, text="Quitter", command=frame.quit)
         exit_button.pack(side=tk.LEFT, padx=5)
 
 
@@ -3156,7 +3106,7 @@ def create_main_window():
             orders_tree.delete(*orders_tree.get_children())
             for order in order_instances:
                 orders_tree.insert("", tk.END, values=(
-                    order.order_id, order.order_date, order.client.clt_id, order.get_str_Products(),
+                    order.order_id, order.order_date, order.client.id, order.get_str_Products(),
                     order.payment_type, 'Oui' if order.pompe else 'Non', order.statut, order.price_paid, order.price))
         
         # historique par client
@@ -3221,10 +3171,11 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
 
-        titre_label = tk.Label(frame, text="Orders", font=("Arial", 16))
+       
+        titre_label = tk.Label(frame, text="Commandes", font=("Arial", 16))
         titre_label.pack(pady=5)
         tree_frame = tk.Frame(frame)
-        tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        tree_frame.pack(fill=tk.BOTH, expand=True, pady=0)
         
         columns = ("commande ID", "Date de la commande", "Client ID", "Produits", "Type de Transaction", "Pompé", "Status", "Montant payé", "Montant")
         order_col_size = [90, 130, 60, 220, 120, 80, 80, 100, 100]
@@ -3296,33 +3247,33 @@ def create_main_window():
         order_paid_entry.config(validatecommand=(frame.register(validate_float), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
         order_paid_entry.pack(side=tk.LEFT, padx=5)
         
-                        
-        # Add the buttons for adding/modifying an order
+        
         button_frame_orders = tk.Frame(frame)
         button_frame_orders.pack(pady=10)
         
-        display_orders()
+
         
         #buttons
-        ctk.CTkButton(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame_orders, text="Ajouter Commande", command=add_order).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame_orders, text="Supprimer Commande", command=delete_order).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame_orders, text="Modifier Commande", command=modify_order).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame_orders, text="Créer un Bon de Commande", command=buttonBDC).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame_orders, text='Historique Commandes', command=get_order_history).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame_orders, text="Commandes impayées", command=get_unpaid_orders).pack(side=tk.LEFT, padx=5)
+        ctk.CTkButton(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=4)
+        ctk.CTkButton(button_frame_orders, text="Ajouter Commande", command=add_order).pack(side=tk.LEFT, padx=4)
+        ctk.CTkButton(button_frame_orders, text="Supprimer Commande", command=delete_order).pack(side=tk.LEFT, padx=4)
+        ctk.CTkButton(button_frame_orders, text="Modifier Commande", command=modify_order).pack(side=tk.LEFT, padx=4)
+        ctk.CTkButton(button_frame_orders, text="Créer un Bon de Commande", command=buttonBDC).pack(side=tk.LEFT, padx=4)
+        ctk.CTkButton(button_frame_orders, text='Historique Commandes', command=get_order_history).pack(side=tk.LEFT, padx=4)
+        ctk.CTkButton(button_frame_orders, text="Commandes impayées", command=get_unpaid_orders).pack(side=tk.LEFT, padx=4)                
+        # Add the buttons for adding/modifying an order
+
+        display_orders()
         #////////////////////////////  FIN INTERFACE ORDER ///////////////////////////////////////////
               
-        
-        
-    ctk.CTkButton(navbar, text="Orders", command=orders).pack(side="left")
-    ctk.CTkButton(navbar, text="Clients", command=Clients).pack(side="left")
-    ctk.CTkButton(navbar, text="Products", command=Products).pack(side="left")
-    ctk.CTkButton(navbar, text="Sales", command=Sales).pack(side="left")
-    ctk.CTkButton(navbar, text="Deliveries", command=Deliveries).pack(side="left")
-    ctk.CTkButton(navbar, text="Suppliers", command=Supplier).pack(side="left")
 
 
+    ctk.CTkButton(sidebar_frame, text="Orders", command=orders).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Clients", command=Clients).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Products", command=Products).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Sales", command=Sales).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Deliveries", command=Deliveries).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Suppliers", command=Supplier).pack(fill='x', padx=20, pady=10)    
     #open_section(frame) #I had an error with this line
     window.mainloop()
 
