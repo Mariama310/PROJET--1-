@@ -1,6 +1,3 @@
 order_id,order_date,client_id,products,payment_type,price,price_paid,pompe,statut
 1,18/01/2024,1,5 : 10 | 2 : 3,Cheques,338.87,0.0,False,Non Payée
-2,20/02/2024,1,2 : 2 | 4 : 3,Cheques,163.95,0.0,False,Non Payée
-3,22/02/2024,3,3 : 2,Chèque,13.98,0.0,True,Payée
 5,23/02/2024,1,6 : 3 | 1 : 10,Chèque,479.87,0.0,True,Payée
-4,29/02/2024,3,1 : 10,Chèque,359.9,359.9,False,Payée
