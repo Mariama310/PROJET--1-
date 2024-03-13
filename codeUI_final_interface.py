@@ -1439,6 +1439,7 @@ def create_main_window():
 
             # Read the existing data from the CSV file
             csv_file_path = "./class_supplier.csv"
+            deleted_suppliers_file_path = "./deleted_supplier.csv"  # Path for the file to store deleted suppliers
 
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -1446,24 +1447,30 @@ def create_main_window():
 
             deleted_supplier = None
 
-            # Find and delete the supplier in the CSV data
+            # Find and store the supplier to be deleted
             for idx, row in enumerate(rows):
                 if idx > 0:  # Skip the header row
                     current_supplier_id = int(row[0])
                     if current_supplier_id == supplier_id_to_delete:
-                        deleted_supplier = rows.pop(idx)
+                        deleted_supplier = row
                         break
 
             if deleted_supplier:
-                # Update the CSV file with the modified data
+                # Append the deleted supplier to the 'deleted_supplier.csv' file
+                with open(deleted_suppliers_file_path, mode='a', newline='', encoding='utf-8') as deleted_csv_file:
+                    csv_writer = csv.writer(deleted_csv_file)
+                    csv_writer.writerow(deleted_supplier)
+
+                # Remove the deleted supplier from the original list and update the main CSV file
+                rows.remove(deleted_supplier)
                 with open(csv_file_path, mode='w', newline='', encoding='utf-8') as csv_file:
                     csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                    csv_writer.writerows([rows[0]] + rows[1:])  # Write the header row and updated data
+                    csv_writer.writerows(rows)
 
                 # Update the display
                 refresh_suppliers()
 
-                # Clear the entry fields for the deleted supplier from the interface using specific entry variables
+                # Clear the entry fields for the deleted supplier
                 supplier_id_entry_supplier.delete(0, tk.END)
                 name_entry_supplier.delete(0, tk.END)
                 address_entry_supplier.delete(0, tk.END)
@@ -1471,6 +1478,7 @@ def create_main_window():
                 contact_person_entry_supplier.delete(0, tk.END)
                 email_entry_supplier.delete(0, tk.END)
 
+        
                 # Inform about the deletion
                 messagebox.showinfo("Suppression", f"Fournisseur {deleted_supplier[1]} supprimé avec succès.")
             else:
