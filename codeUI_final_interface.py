@@ -1180,6 +1180,7 @@ def create_main_window():
                     historique_entry.insert(tk.END, values[4])
                     
         def add_product():
+            
             produit_id = product_id_entry.get()
             description = description_entry.get()
             price = price_entry.get()
@@ -1195,7 +1196,7 @@ def create_main_window():
                     new_id = size
                     
                     df.loc[size] = [new_id, description, price, quantity_in_stock, historique]
-                    df.to_csv('.class_product.csv', index=False)
+                    df.to_csv('./class_product.csv', index=False)
                 
                     new_product = Product(new_id, description, price, quantity_in_stock, historique)
                     product_instances.append(new_product)
@@ -1203,7 +1204,8 @@ def create_main_window():
                     product_id_entry.delete(0, tk.END)
                     description_entry.delete(0, tk.END)
                     price_entry.delete(0, tk.END)
-                    quantity_in_stock.delete(0, tk.END)  # Set default value for Type de Transaction
+                    quantity_entry.delete(0, tk.END)
+                    historique_entry.delete(0, tk.END)  # Set default value for Type de Transaction
                 else:
                     messagebox.showerror("Erreur", "L'identifiant de client doit être une valeur numérique.")
             else:
@@ -1227,7 +1229,7 @@ def create_main_window():
                 refresh_product_ids()
                 refresh_products_table()
             else:
-                messagebox.showwarning("Avertissement", "Veuillez sÃ©lectionner un produit Ã  supprimer.")
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un produit à  supprimer.")
                 
         def modify_product():
             selected_item = products_tree.selection()
@@ -1265,10 +1267,10 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à modifier.")
     # Create the table to display products data
-        titre_label = tk.Label(frame, text="Poduits", font=("Arial", 16))
+        titre_label = tk.Label(frame, text="Produits", font=("Arial", 16))
         titre_label.pack(pady=5)
         
-        columns_products = ("product_id", "description", "price", "quantity_in_stock", "historique")
+        columns_products = ("ID", "Description", "Prix", "Quatité en stock", "Historique")
         
         tree_frame = tk.Frame(frame)
         tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -1293,7 +1295,7 @@ def create_main_window():
         input_frame_products = tk.Frame(frame)
         input_frame_products.pack()
 
-        fields = ["product_id", "description", "price", "quantity_in_stock", "historique"]
+        fields = ["ID", "Description", "Prix", "Quantité en stock", "Historique"]
 
         entries = []
 
@@ -2856,8 +2858,8 @@ def create_main_window():
         clients_tree = ttk.Treeview(tree_frame, columns=columns_clients, show="headings", style='Custom.Treeview')
         
         scrollbar.config(command=clients_tree.yview)    
-        clients_tree = ttk.Treeview(tree_frame, columns=columns_clients, show="headings", style='Custom.Treeview')
-        scrollbar.config(command=clients_tree.yview)
+        # clients_tree = ttk.Treeview(tree_frame, columns=columns_clients, show="headings", style='Custom.Treeview')
+        # scrollbar.config(command=clients_tree.yview)
         # clients_tree.pack(side='left', fill=tk.BOTH, expand=True)
 
         for col in columns_clients:
@@ -2903,7 +2905,7 @@ def create_main_window():
 
         # buttons
         button_frame_clients = tk.Frame(frame)
-        button_frame_clients.pack(pady=10)
+        button_frame_clients.pack(pady=5)
 
         display_clients = ctk.CTkButton(button_frame_clients, text="Liste des Clients", command=display_clients)
         display_clients.pack(side=tk.LEFT, padx=5)
@@ -3276,12 +3278,12 @@ def create_main_window():
               
 
 
-    ctk.CTkButton(sidebar_frame, text="Orders", command=orders).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Commandes", command=orders).pack(fill='x', padx=20, pady=10)
     ctk.CTkButton(sidebar_frame, text="Clients", command=Clients).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Products", command=Products).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Sales", command=Sales).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Deliveries", command=Deliveries).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Suppliers", command=Supplier).pack(fill='x', padx=20, pady=10)    
+    ctk.CTkButton(sidebar_frame, text="Produits", command=Products).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Ventes", command=Sales).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Livraisons", command=Deliveries).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Fournisseurs", command=Supplier).pack(fill='x', padx=20, pady=10)    
     #open_section(frame) #I had an error with this line
     window.mainloop()
 
