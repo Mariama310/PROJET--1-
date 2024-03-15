@@ -2403,20 +2403,87 @@ def create_main_window():
         input_frame_deliverie = tk.Frame(frame)
         input_frame_deliverie.pack()
 
-        fields = ["N° de livraison", "Client", "Adresse", "ID produit"]
+        def set_completion_list(entry, completion_list):
+            _completion_list = sorted(completion_list)
+            _hits = []
+            position = 0
+            entry.bind('<KeyRelease>', lambda event: handle_keyrelease(event, entry, _completion_list, _hits, position))
+            entry['values'] = _completion_list
+
+        def autocomplete(entry, completion_list, delta=0):
+            if delta:
+                entry.delete(position, tk.END)
+            else:
+                position = len(entry.get())
+
+            _hits = []
+            for item in completion_list:
+                if item.lower().startswith(entry.get().lower()):
+                    _hits.append(item)
+
+            if _hits != entry._hits:
+                entry._hits = _hits
+                entry['values'] = _hits
+
+        def handle_keyrelease(event, entry, completion_list, hits, position):
+            if event.keysym in ('BackSpace', 'Left', 'Right', 'Up', 'Down', 'Shift', 'Control'):
+                return
+
+            if event.keysym == 'Return':
+                entry._hits = []
+                return
+
+            if event.keysym in ('BackSpace', 'Left', 'Right'):
+                autocomplete(entry, completion_list, -1)
+            else:
+                autocomplete(entry, completion_list)
+
+        def load_names_from_csv(csv_file):
+            names = []
+            with open(csv_file, 'r') as file:
+                reader = csv.reader(file, delimiter=',')
+                next(reader)  # Skip header
+                for row in reader:
+                    names.append(row[1])  # Assuming names are in the first column
+            return names
+
+        def on_select(event):
+            value = entry_var.get()
+            print(f"Selected: {value}")
+
+        fields = ["N° de livraison", "Client", "N° de commande", "ID produit"]
 
         entries = []
 
         for idx, field_text in enumerate(fields):
-            row_num = idx // 2
-            col_num = idx % 2 * 2 + 1
 
-            label = tk.Label(input_frame_deliverie, text=f"{field_text} :")
-            label.grid(row=row_num, column=col_num - 1, padx=5, pady=5, sticky="e")
+            
+        
+            if field_text== "Client":
+                entry_var = tk.StringVar()
+                names_list=load_names_from_csv('class_client.csv')
+                row_num = idx // 2
+                col_num = idx % 2 * 2 + 1
 
-            entry = tk.Entry(input_frame_deliverie)
-            entry.grid(row=row_num, column=col_num, padx=5, pady=5)
-            entries.append(entry)
+                label = tk.Label(input_frame_deliverie, text=f"{field_text} :")
+                label.grid(row=row_num, column=col_num - 1, padx=5, pady=5, sticky="e")
+
+                entry = ttk.Combobox(input_frame_deliverie, textvariable=entry_var)
+                set_completion_list(entry,names_list)
+                entry.grid(row=row_num, column=col_num, padx=5, pady=5)
+                entries.append(entry)
+
+            else:
+                row_num = idx // 2
+                col_num = idx % 2 * 2 + 1
+
+                label = tk.Label(input_frame_deliverie, text=f"{field_text} :")
+                label.grid(row=row_num, column=col_num - 1, padx=5, pady=5, sticky="e")
+
+                entry = tk.Entry(input_frame_deliverie)
+                entry.grid(row=row_num, column=col_num, padx=5, pady=5)
+                entries.append(entry)
+
 
         # Access the entry fields using the list entries with specific names
         n_entry = entries[0]
@@ -2424,41 +2491,40 @@ def create_main_window():
         order_entry = entries[2]
         prod_entry = entries[3]
 
-        class AutocompleteEntry(ttk.Combobox):
-            def set_completion_list(self, completion_list):
-                self._completion_list = sorted(completion_list)
-                self._hits = []
-                self.position = 0
-                self.bind('<KeyRelease>', self.handle_keyrelease)
-                self['values'] = self._completion_list
+        def set_completion_list(entry, completion_list):
+            _completion_list = sorted(completion_list)
+            _hits = []
+            position = 0
+            entry.bind('<KeyRelease>', lambda event: handle_keyrelease(event, entry, _completion_list, _hits, position))
+            entry['values'] = _completion_list
 
-            def autocomplete(self, delta=0):
-                if delta:
-                    self.delete(self.position, tk.END)
-                else:
-                    self.position = len(self.get())
+        def autocomplete(entry, completion_list, delta=0):
+            if delta:
+                entry.delete(position, tk.END)
+            else:
+                position = len(entry.get())
 
-                _hits = []
-                for item in self._completion_list:
-                    if item.lower().startswith(self.get().lower()):
-                        _hits.append(item)
+            _hits = []
+            for item in completion_list:
+                if item.lower().startswith(entry.get().lower()):
+                    _hits.append(item)
 
-                if _hits != self._hits:
-                    self._hits = _hits
-                    self['values'] = _hits
+            if _hits != entry._hits:
+                entry._hits = _hits
+                entry['values'] = _hits
 
-            def handle_keyrelease(self, event):
-                if event.keysym in ('BackSpace', 'Left', 'Right', 'Up', 'Down', 'Shift', 'Control'):
-                    return
+        def handle_keyrelease(event, entry, completion_list, hits, position):
+            if event.keysym in ('BackSpace', 'Left', 'Right', 'Up', 'Down', 'Shift', 'Control'):
+                return
 
-                if event.keysym == 'Return':
-                    self._hits = []
-                    return
+            if event.keysym == 'Return':
+                entry._hits = []
+                return
 
-                if event.keysym in ('BackSpace', 'Left', 'Right'):
-                    self.autocomplete(-1)
-                else:
-                    self.autocomplete()
+            if event.keysym in ('BackSpace', 'Left', 'Right'):
+                autocomplete(entry, completion_list, -1)
+            else:
+                autocomplete(entry, completion_list)
 
         def load_names_from_csv(csv_file):
             names = []
