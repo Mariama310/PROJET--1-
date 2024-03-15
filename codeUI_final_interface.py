@@ -57,16 +57,19 @@ class Personne:
 
 class Supplier(Personne):
     
-    def __init__(self, supplier_id, name=None, address=None, phone_number=None):
+    def __init__(self, supplier_id, name=None, address=None, phone_number=None, contact_person=None, email=None):
         super().__init__(supplier_id, name, address, phone_number)
         self._supplier_id = supplier_id
-    
-    def get_supplier_id(self):
+        self.contact_person = contact_person
+        self.email = email
+
+    @property
+    def supplier_id(self):
         return self._supplier_id
     
-    def set_supplier_id(self, supplier_id):
+    @supplier_id.setter
+    def supplier_id(self, supplier_id):
         self._supplier_id = supplier_id
-    id=property(get_supplier_id,set_supplier_id)
 
 class Employee(Personne):
     def __init__(self, employee_id, name=None, address=None, phone_number=None, position=None, salary=None, authority=None):
@@ -157,9 +160,6 @@ class Database:
 
     def add_sale(self, sale):
         self.sales.append(sale)
-
-    def add_supplier(self, supplier):
-        self.suppliers.append(supplier)
 
     def add_invoice(self, invoice):
         self.invoices.append(invoice)
@@ -1045,6 +1045,13 @@ def generate_new_supplier_id():
     # Retrieve existing supplier IDs from the CSV file
     csv_file_path = "./class_supplier.csv" # Replace with the actual path to your CSV file
     existing_ids = set()
+    with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for supplier in reader:
+            existing_ids.add(int(supplier['supplier_id']))
+
+    new_id = max(existing_ids, default=0) + 1
+    return new_id
 
 def convert_docx_to_pdf(docx_filename, pdf_filename):
     # Create a Word application object
@@ -1334,7 +1341,7 @@ def create_main_window():
         modify_button_orders.pack(side=tk.LEFT, padx=5)
 
         
-    def Supplier():
+    def manage_supplier():
         Clear_widgets(frame)
         def refresh_suppliers():
             # Clear old data from the display
@@ -1377,11 +1384,10 @@ def create_main_window():
                     phone_entry_supplier.insert(tk.END, values[3])
                     contact_person_entry_supplier.insert(tk.END, values[4])
                     email_entry_supplier.insert(tk.END, values[5])
-        
+
         def add_supplier():
             try:
-                global name_entry_supplier, address_entry_supplier, phone_entry_supplier, contact_person_entry_supplier, email_entry_supplier
-
+            
                 # Retrieve values from the entry fields using specific entry variables
                 new_name = name_entry_supplier.get()
                 new_address = address_entry_supplier.get()
@@ -1407,9 +1413,13 @@ def create_main_window():
 
                 # Generate a new ID automatically
                 new_id = generate_new_supplier_id()
+                if new_id is None:
+                    messagebox.showerror("Erreur", "Impossible de générer un nouvel ID fournisseur.")
+                    return
 
                 # Create a new supplier object
                 new_supplier = Supplier(new_id, new_name, new_address, new_main_number, new_contact_person, new_email)
+
 
                 # Insert the new supplier data into the CSV file
                 csv_file_path = "./class_supplier.csv"
@@ -1611,6 +1621,7 @@ def create_main_window():
         
         display_sales = ctk.CTkButton(button_frame_suppliers, text="Liste des fournisseurs", command=refresh_suppliers)
         display_sales.pack(side=tk.LEFT, padx=5)
+        
         add_button_suppliers = ctk.CTkButton(button_frame_suppliers, text="Ajouter Fournisseur", command=add_supplier)
         add_button_suppliers.pack(side=tk.LEFT, padx=5)
 
@@ -3281,7 +3292,7 @@ def create_main_window():
     ctk.CTkButton(sidebar_frame, text="Products", command=Products).pack(fill='x', padx=20, pady=10)
     ctk.CTkButton(sidebar_frame, text="Sales", command=Sales).pack(fill='x', padx=20, pady=10)
     ctk.CTkButton(sidebar_frame, text="Deliveries", command=Deliveries).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Suppliers", command=Supplier).pack(fill='x', padx=20, pady=10)    
+    ctk.CTkButton(sidebar_frame, text="Suppliers", command=manage_supplier).pack(fill='x', padx=20, pady=10)    
     #open_section(frame) #I had an error with this line
     window.mainloop()
 
