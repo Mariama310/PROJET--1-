@@ -3283,12 +3283,12 @@ def create_main_window():
               
 
 
-    ctk.CTkButton(sidebar_frame, text="Orders", command=orders).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Commandes", command=orders).pack(fill='x', padx=20, pady=10)
     ctk.CTkButton(sidebar_frame, text="Clients", command=Clients).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Products", command=Products).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Sales", command=Sales).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Deliveries", command=Deliveries).pack(fill='x', padx=20, pady=10)
-    ctk.CTkButton(sidebar_frame, text="Suppliers", command=manage_supplier).pack(fill='x', padx=20, pady=10)    
+    ctk.CTkButton(sidebar_frame, text="Produits", command=Products).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Ventes", command=Sales).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Livraisons", command=Deliveries).pack(fill='x', padx=20, pady=10)
+    ctk.CTkButton(sidebar_frame, text="Fournisseurs", command=manage_supplier).pack(fill='x', padx=20, pady=10)    
     #open_section(frame) #I had an error with this line
     window.mainloop()
 
