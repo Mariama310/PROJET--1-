@@ -1187,34 +1187,30 @@ def create_main_window():
                     historique_entry.insert(tk.END, values[4])
                     
         def add_product():
-            produit_id = product_id_entry.get()
-            description = description_entry.get()
-            price = price_entry.get()
-            quantity_in_stock = quantity_entry.get()
-            historique = historique_entry.get()
-            if produit_id and description and price and quantity_in_stock and historique:
-                if is_numeric_input(produit_id):
-                    new_id = get_next_order_id()
-                    
-                    df = pd.read_csv("./class_product.csv")
-                    size = df.shape[0] + 1
-
-                    new_id = size
-                    
-                    df.loc[size] = [new_id, description, price, quantity_in_stock, historique]
-                    df.to_csv('.class_product.csv', index=False)
-                
-                    new_product = Product(new_id, description, price, quantity_in_stock, historique)
-                    product_instances.append(new_product)
-                    products_tree.insert("", tk.END, values=(new_id, description, price, quantity_in_stock, historique))
-                    product_id_entry.delete(0, tk.END)
-                    description_entry.delete(0, tk.END)
-                    price_entry.delete(0, tk.END)
-                    quantity_in_stock.delete(0, tk.END)  # Set default value for Type de Transaction
-                else:
-                    messagebox.showerror("Erreur", "L'identifiant de client doit être une valeur numérique.")
-            else:
-                messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
+                    description = description_entry.get()
+                    price = price_entry.get()
+                    quantity_in_stock = quantity_entry.get()
+                    historique = historique_entry.get()
+                    if description and price and quantity_in_stock and historique:
+                            new_id = get_next_order_id()
+                            
+                            df = pd.read_csv("./test_class_product.csv")
+                            size = df.shape[0] + 1
+        
+                            new_id = size
+                            
+                            df.loc[size] = [new_id, description, price, quantity_in_stock, historique]
+                            df.to_csv('./test_class_product.csv', index=False)
+                        
+                            new_product = Product(new_id, description, price, quantity_in_stock, historique)
+                            product_instances.append(new_product)
+                            products_tree.insert("", tk.END, values=(new_id, description, price, quantity_in_stock, historique))
+                            product_id_entry.delete(0, tk.END)
+                            description_entry.delete(0, tk.END)
+                            price_entry.delete(0, tk.END)
+                            quantity_in_stock.delete(0, tk.END)  # Set default value for Type de Transaction
+                    else:
+                        messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
                 
         def delete_product():
             selected_item = products_tree.selection()
