@@ -1268,10 +1268,10 @@ def create_main_window():
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner une commande à modifier.")
     # Create the table to display products data
-        titre_label = tk.Label(frame, text="Poduits", font=("Arial", 16))
+        titre_label = tk.Label(frame, text="Produits", font=("Arial", 16))
         titre_label.pack(pady=5)
         
-        columns_products = ("product_id", "description", "price", "quantity_in_stock", "historique")
+        columns_products = ("ID", "Description", "Prix", "Quantité en stock", "Historique")
         
         tree_frame = tk.Frame(frame)
         tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -1296,7 +1296,7 @@ def create_main_window():
         input_frame_products = tk.Frame(frame)
         input_frame_products.pack()
 
-        fields = ["product_id", "description", "price", "quantity_in_stock", "historique"]
+        fields = ["ID produit", "Description", "Prix", "Quantité en stock", "Historique"]
 
         entries = []
 
@@ -1802,7 +1802,7 @@ def create_main_window():
         titre_label = tk.Label(frame, text="Ventes", font=("Arial", 16))
         titre_label.pack(pady=5)
         
-        columns_sales = ("Sale ID","Sale Date","Product ID","Quantity Sold","Sale Price","Client ID")
+        columns_sales = ("ID Vente","Date de la vente","ID produit","Quantité vendue","Prix de la vente","ID Client")
         
         tree_frame = tk.Frame(frame)
         tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -1828,7 +1828,7 @@ def create_main_window():
         input_frame_sales = tk.Frame(frame)
         input_frame_sales.pack()
 
-        fields = ["Sale ID","Sale Date","Product ID","Quantity Sold","Sale Price","Client ID"]
+        fields = ["ID Vente","Date","ID Produit","Quantité vendue","Prix de la vente","ID Client"]
 
         entries = []
 
@@ -2849,7 +2849,7 @@ def create_main_window():
         titre_label = tk.Label(frame, text="Clients", font=("Arial", 16))
         titre_label.pack(pady=5)
         
-        columns_clients = ("ID", "Nom", "Address", "Email", "Numéro de téléphone")
+        columns_clients = ("ID", "Nom", "Adresse", "Email", "Numéro de téléphone")
         
         tree_frame = tk.Frame(frame)
         tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
