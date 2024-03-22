@@ -2808,6 +2808,52 @@ def create_main_window():
                     for client in deleted_clients_data:
                         deleted_clients_tree.insert("", tk.END, values=(client["ID"], client["Name"], client["Address"], client["Email"], client["Phone Number"],client['DateSuppr']))
         
+            def restore_client():
+                global deleted_clients_data
+                global  clients_data
+                selected_item = deleted_clients_tree.selection()
+                if selected_item:
+                    item = deleted_clients_tree.item(selected_item[0])
+                    client_data = item['values']
+                    client_id = client_data[0]
+                    client_name = client_data[1]
+                    client_address = client_data[2]
+                    client_email = client_data[3]
+                    client_phone_number = client_data[4]
+
+                    restored_client = Client(client_id, client_name, client_address, client_email, client_phone_number)
+                    client_instances.append(restored_client)
+                    client_data = {
+                        "ID": client_id,
+                        "Name": client_name,
+                        "Address": client_address,
+                        "Email": client_email,
+                        "Phone Number": client_phone_number
+                    }
+                    df = pd.read_csv('./class_client.csv')
+                    clients_data.append(client_data)
+                    df.to_csv('./class_client.csv', index = False)
+
+                    deleted_clients_data = pd.read_csv('./deleted_clients.csv')
+                    deleted_clients_data = deleted_clients_data[deleted_clients_data['ID'] != client_id]
+                    deleted_clients_data.to_csv('./deleted_clients.csv', index=False)
+                    deleted_clients_data = pd.read_csv('./deleted_clients.csv')
+                    deleted_clients_data= deleted_clients_data.to_dict(orient='records')
+
+                    for client in deleted_clients_data:
+                        if client["ID"] == client_id:
+                            deleted_clients_data.remove(client)
+                            break
+                    
+
+                    deleted_clients_tree.delete(selected_item)
+           
+
+
+                else:
+                    messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
+
+
             # Crée une nouvelle fenêtre pour afficher les paramètres
             new_window = tk.Tk()
             new_window.title("Clients Supprimés")
@@ -2843,16 +2889,18 @@ def create_main_window():
             scrollbar.pack(side='right', fill='y')
             deleted_clients_tree.pack(fill='both', expand=True)
 
-            # Remplissez le Treeview avec les données des clients supprimés
-            # ... (Votre logique pour remplir le Treeview)
+            
 
             # Ajout des boutons de gestion du délai de suppression
             # buttons
             button_frame_deleted_clients = tk.Frame(deleted_clients_frame)
-            button_frame_deleted_clients.pack()
+            button_frame_deleted_clients.pack(pady=10)
 
             display_deleted_clients = ctk.CTkButton(button_frame_deleted_clients, text="Liste des Clients Supprimés", command=display_deleted_clients)
             display_deleted_clients.pack(side=tk.LEFT, padx=5)
+
+            restore_deleted_client = ctk.CTkButton(button_frame_deleted_clients, text = "Récupérer", command=restore_client)
+            restore_deleted_client.pack(side=tk.LEFT, padx=5)
             # delay_frame = tk.Frame(new_root)
             # delay_frame.pack(pady=5)
 
@@ -2865,7 +2913,7 @@ def create_main_window():
             set_delay_button = tk.Button(button_frame_deleted_clients, text="Définir Délai", command=lambda: set_deletion_delay())
             set_delay_button.pack(side=tk.LEFT, padx=5)
 
-            # Définissez la fonction pour gérer le délai de suppression ici
+            # fonction pour gérer le délai de suppression ici
             def set_deletion_delay():
                 try:
                     deletion_delay = int(delay_entry.get())
@@ -2878,20 +2926,20 @@ def create_main_window():
 
             
 
-            # Assurez-vous que la fenêtre popup est modale
+            # fenêtre popup est modale
             new_window.grab_set()
             new_window.focus_set()
             new_window.wait_window()
 
         
-        def reset_history(duration):
-            try:
-                duration_in_days = int(duration)
-                # Ici, vous implémenterez la logique pour nettoyer l'historique basé sur la durée
-                # Par exemple, vous pouvez parcourir le fichier CSV et supprimer les entrées plus anciennes que la durée spécifiée
-                print(f"Réinitialisation de l'historique des clients supprimés pour les enregistrements plus vieux que {duration_in_days} jours.")
-            except ValueError:
-                messagebox.showerror("Erreur", "Veuillez entrer un nombre valide.")
+        # def reset_history(duration):
+        #     try:
+        #         duration_in_days = int(duration)
+        #         # Ici, vous implémenterez la logique pour nettoyer l'historique basé sur la durée
+        #         # Par exemple, vous pouvez parcourir le fichier CSV et supprimer les entrées plus anciennes que la durée spécifiée
+        #         print(f"Réinitialisation de l'historique des clients supprimés pour les enregistrements plus vieux que {duration_in_days} jours.")
+        #     except ValueError:
+        #         messagebox.showerror("Erreur", "Veuillez entrer un nombre valide.")
 
 
         
