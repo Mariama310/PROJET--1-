@@ -2604,6 +2604,7 @@ def create_main_window():
                     phone_entry.insert(tk.END, values[4])
             
         def delete_client():
+            global deleted_clients_data
             selected_item = clients_tree.selection()
             if selected_item:
                 item_id = clients_tree.item(selected_item)["values"][0]
@@ -2803,6 +2804,7 @@ def create_main_window():
         def open_deleted_clients_window():
 
             def display_deleted_clients():
+                global deleted_clients_data
                 deleted_clients_tree.delete(*deleted_clients_tree.get_children())
                 if not deleted_clients_tree.get_children():
                     for client in deleted_clients_data:
@@ -2832,6 +2834,8 @@ def create_main_window():
                     }
                     df = pd.read_csv('./class_client.csv')
                     clients_data.append(client_data)
+                    new_row = pd.DataFrame([client_data])
+                    df = pd.concat([df, new_row], ignore_index=True)
                     df.to_csv('./class_client.csv', index = False)
 
                     deleted_clients_data = pd.read_csv('./deleted_clients.csv')
@@ -2851,7 +2855,7 @@ def create_main_window():
 
 
                 else:
-                    messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
+                    messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à restaurer.")
 
 
             # Crée une nouvelle fenêtre pour afficher les paramètres
