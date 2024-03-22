@@ -2506,6 +2506,48 @@ def create_main_window():
     def Clients():
         Clear_widgets(frame)
 
+        def add_client_info(new_client):
+            # Ajouter à client_instances
+            client_instances.append(new_client)
+
+            # Ajouter à clients_data
+            client_dict = {
+                "ID": new_client.client_id,
+                "Name": new_client.name,
+                "Address": new_client.address,
+                "Email": new_client.email,
+                "Phone Number": new_client.phone_number
+            }
+            clients_data.append(client_dict)
+        
+
+        def delete_client_info(client_id):
+            # Supprimer de client_instances
+            global client_instances
+            client_instances = [client for client in client_instances if client.client_id != client_id]
+
+            # Supprimer de clients_data
+            global clients_data
+            clients_data = [client for client in clients_data if client["ID"] != client_id]
+
+
+
+        def update_client_info(client_id, new_info):
+            # Mettre à jour dans client_instances
+            for client in client_instances:
+                if client.client_id == client_id:
+                    client.name = new_info.get('Name', client.name)
+                    client.address = new_info.get('Address', client.address)
+                    client.phone_number = new_info.get('Phone Number', client.phone_number)
+                    client.email = new_info.get('Email', client.email)
+                    break
+    
+            # Mettre à jour dans clients_data
+            for record in clients_data:
+                if record['ID'] == client_id:
+                    record.update(new_info)
+                    break
+
         def generate_new_client_id():
             # Retrieve existing supplier IDs from the CSV file
             deleted_clients_file_path = "./deleted_clients.csv"
@@ -2565,6 +2607,8 @@ def create_main_window():
             selected_item = clients_tree.selection()
             if selected_item:
                 item_id = clients_tree.item(selected_item)["values"][0]
+                #delete_client_info(item_id)
+
                 df = pd.read_csv('./class_client.csv', sep = ',')
 
                 deleted_client = df[df['ID'] == item_id]
@@ -2573,6 +2617,10 @@ def create_main_window():
                 # add the deleted client to the deleted_clients csv file for archive
                 with open('./deleted_clients.csv', 'a', newline='') as f:
                     deleted_client.to_csv(f, header=f.tell()==0, index=False)
+                
+                #update deleted_client_data
+                deleted_clients_data = pd.read_csv('./deleted_clients.csv')
+                deleted_clients_data= deleted_clients_data.to_dict(orient='records')
 
 
                 df = df[df['ID'] != item_id]
@@ -2583,7 +2631,7 @@ def create_main_window():
                         break
                 
                 clients_tree.delete(selected_item)
-                refresh_client_ids()
+                #refresh_client_ids() #later if you want to have ids starting by 1 on the interface
                 refresh_clients_table()
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à supprimer.")
@@ -2621,10 +2669,19 @@ def create_main_window():
                     new_client = Client(client_id, name, address, email, phone_number)
 
                     df.loc[size] = [client_id, name, address, email, phone_number]
+                    
+                    #add_client_info(new_client)
+                    client_instances.append(new_client)
+                    client_data = {
+                        "ID": client_id,
+                        "Name": name,
+                        "Address": address,
+                        "Email": email,
+                        "Phone Number": phone_number
+                    }
+                    clients_data.append(client_data)
                     df.to_csv('./class_client.csv', index = False)
            
-           
-                    client_instances.append(new_client)
                     clients_tree.insert("", tk.END, values=(client_id, name, address, email, phone_number))
                     client_name_entry.delete(0, tk.END)
                     client_address_entry.delete(0,tk.END)
@@ -2647,11 +2704,16 @@ def create_main_window():
 
                 if client_id and name and email and phone_number:
                     if is_numeric_input(client_id) and is_numeric_input(phone_number):
+                        #updated_info = {"Name": name, "Address": address, "Email": email, "Phone Number": phone_number}
+                        #update_client_info(client_id, updated_info) 
+
                         client_id = int(client_id)
                         selected_client_id = clients_tree.item(selected_item)["values"][0]
                         if selected_client_id == client_id:
                     
                             df = pd.read_csv('./class_client.csv')
+                            df.loc[df['ID'] == client_id, ['Name', 'Address', 'Email', 'Phone Number']] = name, address, email, phone_number
+            
                             colonne_index = 'ID'
                             df = df.set_index(colonne_index)
                             nouvelles_valeurs = {'Name': name, 'Address': address, 'Email': email, 'Phone Number': phone_number}
@@ -2659,7 +2721,22 @@ def create_main_window():
                             df.reset_index(inplace = True)
                     
                             df.to_csv('./class_client.csv', index = False)
-                    
+                            clients_data =pd.read_csv('./class_client.csv')
+                            clients_data = clients_data.to_dict(orient='records')
+
+                            df4=pd.read_csv("./class_client.csv")
+                            client_instances = []
+                            for index, row in df4.iterrows():
+                                client_id = row['ID']
+                                name = row['Name']
+                                address = row['Address']
+                                email_client = row['Email']
+                                phone_number = row['Phone Number']
+                                client = Client(client_id, name, address, phone_number, email_client)
+                                client_instances.append(client)
+#for client in client_instances:
+
+
                             clients_tree.item(selected_item, values=(client_id, name, address, email, phone_number))
                             messagebox.showinfo("Succès", "Client modifié avec succès.")
                     
