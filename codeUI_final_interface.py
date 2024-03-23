@@ -2667,7 +2667,7 @@ def create_main_window():
                     size = df.shape[0] + 1
 
                     client_id= generate_new_client_id()
-                    new_client = Client(client_id, name, address, email, phone_number)
+                    new_client = Client(client_id, name, address, email=email, phone_number=phone_number)
 
                     df.loc[size] = [client_id, name, address, email, phone_number]
                     
@@ -2823,7 +2823,7 @@ def create_main_window():
                     client_email = client_data[3]
                     client_phone_number = client_data[4]
 
-                    restored_client = Client(client_id, client_name, client_address, client_email, client_phone_number)
+                    restored_client = Client(client_id, client_name, client_address, email=client_email, phone_number=client_phone_number)
                     client_instances.append(restored_client)
                     client_data = {
                         "ID": client_id,
@@ -3231,7 +3231,7 @@ def create_main_window():
             
             def Suppr():
                 order_listprod_var.set("")
-                listProd=[]
+                listProd[:]=[]
             
             newWindow = tk.Toplevel(frame)
             newWindow.geometry('380x150+400+200')
@@ -3242,7 +3242,7 @@ def create_main_window():
             order_add_qty_entry = tk.Entry(newWindow, width=14, validate='key', validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
             order_add_qty_entry.grid(column=1, row=2)
             order_add_qty_entry.bind('<Return>', onclickProduct)
-            tk.Button(newWindow, text="Supprimer", command=Suppr).grid(column=0, row=3)
+            tk.Button(newWindow, text="Tout supprimer", command=Suppr).grid(column=0, row=3)
             tk.Button(newWindow, text="Ajouter produit", command=onclickProduct).grid(column=1, row=3, pady=5)
             listProd = [(desc,qty) for desc, qty in (a.split(' : ') for a in order_listprod_var.get().split('\n'))] if order_listprod_var.get()!="" else []
 
@@ -3314,6 +3314,7 @@ def create_main_window():
                 
             else:
                 messagebox.showwarning("Avertissement", "Veuillez sélectionner un client à modifier.")
+            resetVar()
 
        
         titre_label = tk.Label(frame, text="Commandes", font=("Arial", 16))
@@ -3335,67 +3336,61 @@ def create_main_window():
             orders_tree.heading(col, text=col)
             orders_tree.column(col, width=order_col_size[i])
 
-        orders_tree.pack(side=tk.LEFT, pady=10)
+        orders_tree.pack(side=tk.LEFT, pady=10, fill=tk.BOTH)
         orders_tree.bind("<Double-1>", double_click_order)
         
         
         # Add the labels and input fields for adding/modifying an order
         input_frame_orders = tk.Frame(frame)
-        input_frame_orders.pack()
+        input_frame_orders.pack(pady=(15,5))
 
-        tk.Label(input_frame_orders, text="ID de commande :").pack(side=tk.LEFT, padx=5)
+        tk.Label(input_frame_orders, text="ID de commande :").grid(row=0, column=0, padx=5, sticky=tk.E)
         order_id_entry = tk.Entry(input_frame_orders, validate="key")
         order_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        order_id_entry.pack(side=tk.LEFT, padx=5)
+        order_id_entry.grid(row=0, column=1, padx=5, sticky=tk.W)
 
-        tk.Label(input_frame_orders, text="Date de commande :").pack(side=tk.LEFT, padx=5)
-        order_date_label = tk.Label(input_frame_orders, bg="white", width=10, relief='sunken', bd=1, cursor='hand2')
-        order_date_label.pack(side=tk.LEFT, padx=5)
+        tk.Label(input_frame_orders, text="Date de commande :").grid(row=0, column=2, padx=5, sticky=tk.E)
+        order_date_label = tk.Label(input_frame_orders, bg="white", width=12, relief='sunken', bd=1, cursor='hand2')
+        order_date_label.grid(row=0, column=3, padx=5, sticky=tk.W)
         order_date_label.bind('<Button-1>', GetDate)
         
-        tk.Label(input_frame_orders, text="ID de client :").pack(side=tk.LEFT, padx=5)
-        order_client_id_entry = tk.Entry(input_frame_orders, validate="key")
+        tk.Label(input_frame_orders, text="ID de client :").grid(row=0, column=4, padx=5, sticky=tk.E)
+        order_client_id_entry = tk.Entry(input_frame_orders, validate="key", width=11)
         order_client_id_entry.config(validatecommand=(frame.register(validate_id), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        order_client_id_entry.pack(side=tk.LEFT, padx=5)
-        
-        tk.Label(input_frame_orders, text="Produits :").pack(side=tk.LEFT, padx=5)
-        order_listprod_var = tk.StringVar(input_frame_orders, "")
-        order_listprod_label = tk.Label(input_frame_orders, textvariable=order_listprod_var, bg="white", width=40, relief='sunken', bd=1, justify='left', anchor='w', cursor='hand2')
-        order_listprod_label.pack(side=tk.LEFT, padx=5)
-        order_listprod_label.bind('<Button-1>', ProductList)
-        
-        
-        # Add the select boxes for Type de Transaction and Statut
-        transaction_frame = tk.Frame(frame)
-        transaction_frame.pack(pady=10)
+        order_client_id_entry.grid(row=0, column=5, padx=5, sticky=tk.W)
 
-        tk.Label(transaction_frame, text="Type de Transaction:").pack(side=tk.LEFT, padx=5)
+        tk.Label(input_frame_orders, text="Produits :").grid(row=0, column=6, padx=5, sticky=tk.E)
+        order_listprod_var = tk.StringVar(input_frame_orders, "")
+        order_listprod_label = tk.Label(input_frame_orders, textvariable=order_listprod_var, bg="white", width=20, relief='sunken', bd=1, justify='left', anchor='w', cursor='hand2')
+        order_listprod_label.grid(row=0, column=7, padx=5, sticky=tk.W)
+        order_listprod_label.bind('<Button-1>', ProductList)
+
+        tk.Label(input_frame_orders, text="Type de Transaction:").grid(row=1, column=0, padx=5, sticky=tk.E)
         type_transaction_var = tk.StringVar(frame)
         type_transaction_var.set("Chèque")
-        type_transaction_select = ttk.Combobox(transaction_frame, textvariable=type_transaction_var, values=["Chèque", "Espèces", "Virement"], state="readonly")
-        type_transaction_select.pack(side=tk.LEFT, padx=5)
+        type_transaction_select = ttk.Combobox(input_frame_orders, textvariable=type_transaction_var, values=["Chèque", "Espèces", "Virement"], state="readonly", width=17)
+        type_transaction_select.grid(row=1, column=1, padx=5, sticky=tk.W)
 
-        tk.Label(transaction_frame, text="Statut:").pack(side=tk.LEFT, padx=5)
+        tk.Label(input_frame_orders, text="Statut :").grid(row=1, column=2, padx=5, sticky=tk.E)
         statut_var = tk.StringVar(frame)
         statut_var.set("Non Payée")
-        statut_select = ttk.Combobox(transaction_frame, textvariable=statut_var, values=["Payée", "Non Payée", "Avance"], state="readonly")
-        statut_select.pack(side=tk.LEFT, padx=5)
+        statut_select = ttk.Combobox(input_frame_orders, textvariable=statut_var, values=["Payée", "Non Payée", "Avance"], state="readonly", width=11)
+        statut_select.grid(row=1, column=3, padx=5, sticky=tk.W)
 
-        tk.Label(transaction_frame, text="Pompé :").pack(side=tk.LEFT, padx=5)
+        tk.Label(input_frame_orders, text="Pompé :").grid(row=1, column=4, padx=5, sticky=tk.E)
         pompe_var = tk.StringVar(frame)
         pompe_var.set("Oui")
-        ttk.Combobox(transaction_frame, textvariable=pompe_var, values=["Oui", "Non"], state="readonly").pack(side=tk.LEFT, padx=5)
+        ttk.Combobox(input_frame_orders, textvariable=pompe_var, values=["Oui", "Non"], state="readonly", width=8).grid(row=1, column=5, padx=5, sticky=tk.W)
         
-        tk.Label(transaction_frame, text="Montant payé :").pack(side=tk.LEFT, padx=5)
-        order_paid_entry = tk.Entry(transaction_frame, validate="key")
+        tk.Label(input_frame_orders, text="Montant payé :").grid(row=1, column=6, padx=5, sticky=tk.E)
+        order_paid_entry = tk.Entry(input_frame_orders, validate="key", width=23)
         order_paid_entry.config(validatecommand=(frame.register(validate_float), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-        order_paid_entry.pack(side=tk.LEFT, padx=5)
+        order_paid_entry.grid(row=1, column=7, padx=5, sticky=tk.W)
         
         
         button_frame_orders = tk.Frame(frame)
-        button_frame_orders.pack(pady=10)
+        button_frame_orders.pack(pady=15)
         
-
         
         #buttons
         ctk.CTkButton(button_frame_orders, text="Liste des commandes", command=display_orders).pack(side=tk.LEFT, padx=4)
@@ -3470,3 +3465,4 @@ login_button = ctk.CTkButton(login_window, text="Se connecter", command=login, f
 login_button.pack(pady=(0, 20))
 
 login_window.mainloop()
+#Bravo tu as lu tout le code !
