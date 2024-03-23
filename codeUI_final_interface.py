@@ -886,8 +886,9 @@ for index, row in df8.iterrows():
     prd+=quant
 
 #For Sale class
-df9 = pd.read_csv("./class_sales.csv")
+#df9 = pd.read_csv("./class_sales.csv")
 #print(df9)
+"""
 sale_instances = []
 
 for index, row in df9.iterrows():
@@ -899,7 +900,7 @@ for index, row in df9.iterrows():
     client_id = row['Client ID']
     sale = Sale(sale_date, product_id, quantity_sold, sale_price,client_id)
     sale_instances.append(sale)
-
+"""
 
 
 #### USER INTERFACE 
@@ -1023,55 +1024,27 @@ def validate_date(input_str):
         
         # Check if month is in the range 1-12
         if not (1 <= month <= 12):
-            #messagebox.showerror("Erreur",f"Mois invalide")
             vd_array[1]=False
-            #return False
         
         # Check if year is a valid 4-digit number
         if not (1000 <= year <= 9999):
-            #messagebox.showerror("Erreur",f"Année invalide")
             vd_array[2]=False
-            #return False
         
         # Check if the day is within the valid range for the given month
         if month in [1, 3, 5, 7, 8, 10, 12]:
             if not (1 <= day <= 31):
-                #messagebox.showerror("Erreur",f"Jour invalide")
                 vd_array[0]=False
-                #return False
         elif month in [4, 6, 9, 11]:
             if not (1 <= day <= 30):
-                #messagebox.showerror("Erreur",f"Jour invalide")
                 vd_array[0]=False
-                #return False
         elif month == 2:
             if calendar.isleap(year):
                 if not (1 <= day <= 29):
-                  #messagebox.showerror("Erreur",f"Jour invalide")
                   vd_array[0]=False
-                  #return False
             else:
                 if not (1 <= day <= 28):
-                  #messagebox.showerror("Erreur",f"Jour invalide")
                   vd_array[0]=False
-                  #return False
-        #return vd_array
-        """        
-        # Get the current date
-        current_date = datetime.date.today()
-        
-        # Create a datetime object for the input date
-        input_date = datetime(year, month, day).date()
-        
-        # Check if the input date is not after today
-        if input_date > current_date:
-            messagebox.showerror("Erreur",f"Une vente ne peut pas avoir lieu apres aujourd'hui")
-            return False"""
-        #messagebox.showinfo("Succès", "Date attribuée avec succès.")
-        #return True,vd_array
         return vd_array
-    #else:
-     #   return False,[False,False,False]
     
 def is_date_input_result(input_str):
     message = ""
