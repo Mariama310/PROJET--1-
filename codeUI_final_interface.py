@@ -1000,13 +1000,105 @@ def is_numeric_input(input_str):
 
 def is_price_input(input_str):
     """Check if the input string is numeric."""
-    return re.match(r'^\d+\.?\d{2}$', input_str) is not None
+    return re.match(r'^\d+\.?\d{0,2}$', input_str) is not None
 
 def is_float(string):
     if string.replace('.', '').isnumeric() and string.count('.')<2:
         return True
     else:
         return False
+    
+import calendar
+#from datetime import datetime
+
+def is_date_input(input_str):
+    """Check if the input string is a valid date."""
+    return re.match(r'^\d{2}/\d{2}/\d{4}$', input_str) is not None
+
+def validate_date(input_str):
+    #if is_date_input(input_str):
+        # Extract day, month, and year from the input string
+        day, month, year = map(int, input_str.split('/'))
+        vd_array=[True,True,True]
+        
+        # Check if month is in the range 1-12
+        if not (1 <= month <= 12):
+            #messagebox.showerror("Erreur",f"Mois invalide")
+            vd_array[1]=False
+            #return False
+        
+        # Check if year is a valid 4-digit number
+        if not (1000 <= year <= 9999):
+            #messagebox.showerror("Erreur",f"Année invalide")
+            vd_array[2]=False
+            #return False
+        
+        # Check if the day is within the valid range for the given month
+        if month in [1, 3, 5, 7, 8, 10, 12]:
+            if not (1 <= day <= 31):
+                #messagebox.showerror("Erreur",f"Jour invalide")
+                vd_array[0]=False
+                #return False
+        elif month in [4, 6, 9, 11]:
+            if not (1 <= day <= 30):
+                #messagebox.showerror("Erreur",f"Jour invalide")
+                vd_array[0]=False
+                #return False
+        elif month == 2:
+            if calendar.isleap(year):
+                if not (1 <= day <= 29):
+                  #messagebox.showerror("Erreur",f"Jour invalide")
+                  vd_array[0]=False
+                  #return False
+            else:
+                if not (1 <= day <= 28):
+                  #messagebox.showerror("Erreur",f"Jour invalide")
+                  vd_array[0]=False
+                  #return False
+        #return vd_array
+        """        
+        # Get the current date
+        current_date = datetime.date.today()
+        
+        # Create a datetime object for the input date
+        input_date = datetime(year, month, day).date()
+        
+        # Check if the input date is not after today
+        if input_date > current_date:
+            messagebox.showerror("Erreur",f"Une vente ne peut pas avoir lieu apres aujourd'hui")
+            return False"""
+        #messagebox.showinfo("Succès", "Date attribuée avec succès.")
+        #return True,vd_array
+        return vd_array
+    #else:
+     #   return False,[False,False,False]
+    
+def is_date_input_result(input_str):
+    message = ""
+
+    if is_date_input(input_str):
+      #vd_bool,tab = validate_date(input_str)
+      tab = validate_date(input_str)
+      #print(vd_bool,tab)
+      
+      result_validator = True
+
+      date_slice = ["Jour","Mois","Annee"]
+      for i in range(3):
+          if tab[i]==False:
+              message += date_slice[i] + " "
+              result_validator = False
+
+      #vd_bool = vd_bool and result_validator
+      if result_validator :#vd_bool:
+        message+="Date OK"
+      else:
+        message += "invalide.s"
+      return result_validator, message #vd_bool, message
+    
+    else: 
+      return False, "Format de date invalide (JJ/MM/AAAA)"
+    
 
 def validate_phone_number(action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name):
     """Validate the phone number field to allow only numeric input."""
@@ -1644,8 +1736,8 @@ def create_main_window():
             if (#sale_id and 
             date and prod_id and quant and price and client_id):
                 if (#is_numeric_input(sale_id) and 
-                    is_numeric_input(prod_id) and is_numeric_input(quant) 
-                and is_price_input(price) and is_numeric_input(client_id)):
+                    is_date_input_result(date)[0] and is_numeric_input(prod_id) and is_numeric_input(quant)  
+                    and is_price_input(price) and is_numeric_input(client_id)):
                     
                     df = pd.read_csv('./class_sales.csv')
                     df2 = pd.read_csv('./deleted_sales.csv')
@@ -1688,14 +1780,15 @@ def create_main_window():
                 else:
                     message=""
                     #if not is_numeric_input(sale_id) : message+="id de la vente;"
+                    if not is_date_input_result(date)[0] : 
+                        message +="date de la vente [" + is_date_input_result(date)[1] +"]"
+                        #print(is_date_input(date))
                     if not is_numeric_input(prod_id) : message+="id du produit;"
                     if not is_numeric_input(quant) : message+="quantité vendue;"
-                    if not is_price_input(price) : 
-                        message+="prix de vente;"
-                        print(type(price))
+                    if not is_price_input(price) : message+="prix de vente [Format xxxxx ou xxxxx.x ou xxxxx.xx];" #print(type(price))
                     if not is_numeric_input(client_id) : message+="id du client;"            
                     messagebox.showerror("Erreur", 
-                                        f"L'id de la vente/l'id du produit/la quantité vendue/le prix de vente/l'identifiant de client\ndoivent être des valeurs numériques.\nErreur sur : {message}")
+                                        f"Veuillez entrer des valeurs numériques ou respectant le bon format (JJ/MM/AAAA).\nErreur sur : {message}")
             else:
                 messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
 
@@ -1745,22 +1838,26 @@ def create_main_window():
                 client_id = client_id_entry.get()
 
                 if sale_id and sale_date and product_id and quantity_sold and sale_price and client_id:
-                    if is_numeric_input(sale_id) and is_numeric_input(product_id) and is_price_input(sale_price) and is_numeric_input(client_id):
+                    if (is_numeric_input(sale_id) and is_date_input_result(sale_date)[0] 
+                        and is_numeric_input(product_id) and is_numeric_input(quantity_sold)
+                        and is_price_input(sale_price) and is_numeric_input(client_id)):
+
                         sale_id=int(sale_id)
                         selected_sale_id = sales_tree.item(selected_item)["values"][0]
                         selected_product_id = sales_tree.item(selected_item)["values"][2]
+                        selected_sale_price = sales_tree.item(selected_item)["values"][4]
+                        print(type(selected_sale_price),selected_sale_price)
+                        print(type(sale_price),sale_price, is_price_input(sale_price))
+                        client_id=int(client_id)
                         selected_client_id = sales_tree.item(selected_item)["values"][5]
-
-                        #if selected_sale_id == sale_id:
                         
-
-                        print(type(selected_sale_id),type(sale_id), type(selected_client_id),type(client_id))
-                        if selected_sale_id == int(sale_id) and selected_product_id == int(product_id) and selected_client_id == int(client_id):
+                        if (selected_sale_id == sale_id and selected_client_id == client_id):
                             df = pd.read_csv('./class_sales.csv')
                             colonne_index = 'Sale ID'
                             df = df.set_index(colonne_index)
                                 
-                            nouvelles_valeurs = {'Sale ID': sale_id, 'Sale Date': sale_date, 'Product ID' : product_id, 'Quantity Sold' : quantity_sold, 'Sale Price' : sale_price, 'Client ID' : client_id}
+                            nouvelles_valeurs = {'Sale ID': sale_id, 'Sale Date': sale_date, 'Product ID' : product_id, 
+                                                'Quantity Sold' : quantity_sold, 'Sale Price' : sale_price, 'Client ID' : client_id}
                             df.loc[sale_id] = nouvelles_valeurs #product_id
                             df.reset_index(inplace = True)
                                 
@@ -1772,7 +1869,18 @@ def create_main_window():
                             messagebox.showerror("Erreur", "L'id de la vente et/ou l'id du client ne peut/peuvent pas être modifié.s.")
                             #mais effectue un ajout au final
                     else:
-                        messagebox.showerror("Erreur", "l'id de vente/l'id de produit/la quantité vendue/l'id du client doivent être des valeurs numériques.")
+                        message=""
+                        if not is_date_input_result(sale_date)[0] : 
+                            message +="date de la vente [" + is_date_input_result(date)[1] +"]"
+                            #print(is_date_input(date))
+                        if not is_numeric_input(sale_id) : message+="id de la vente;"
+                        if not is_numeric_input(product_id) : message+="id du produit;"
+                        if not is_numeric_input(quantity_sold) : message+="quantité vendue;"
+                        if not is_price_input(sale_price) : 
+                            message+="prix de vente [Format xxxxx ou xxxxx.x ou xxxxx.xx];"
+                            #print(type(sale_price), sale_price, is_price_input(sale_price))
+                        if not is_numeric_input(client_id) : message+="id du client;"            
+                        messagebox.showerror("Erreur", f"Veuillez entrer des valeurs numériques. \nErreur sur : {message}")
                 else:
                     messagebox.showerror("Erreur", "Veuillez remplir tous les champs !")
             else:
