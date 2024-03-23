@@ -1000,7 +1000,7 @@ def is_numeric_input(input_str):
 
 def is_price_input(input_str):
     """Check if the input string is numeric."""
-    return re.match(r'^\d+\.\d{2}$', input_str) is not None
+    return re.match(r'^\d+\.?\d{2}$', input_str) is not None
 
 def is_float(string):
     if string.replace('.', '').isnumeric() and string.count('.')<2:
