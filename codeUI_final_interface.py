@@ -1194,13 +1194,13 @@ def create_main_window():
                     if description and price and quantity_in_stock and historique:
                             new_id = get_next_order_id()
                             
-                            df = pd.read_csv("./test_class_product.csv")
+                            df = pd.read_csv("./class_product.csv")
                             size = df.shape[0] + 1
         
                             new_id = size
                             
                             df.loc[size] = [new_id, description, price, quantity_in_stock, historique]
-                            df.to_csv('./test_class_product.csv', index=False)
+                            df.to_csv('./class_product.csv', index=False)
                         
                             new_product = Product(new_id, description, price, quantity_in_stock, historique)
                             product_instances.append(new_product)
